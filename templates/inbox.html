@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+
+            <table id="movie-table" style="width:100%" >
+                <tr>
+                    <th>Title</th>
+                    <th>Director</th> 
+                    <th>Release</th>
+                    <th>Feature</th>
+                    <th>My Rating</th>
+                    <th>Average Rating</th>
+                </tr>
+                {% for item in movieList %}
+                    
+                    <tr>
+                        <td>{{item.title}}</td>
+                        <td>{{item.directorName}}</td>
+                        <td>{{item.release}}</td>
+                        <td><button type="button">Feature This!</button></td>
+                        <td>
+                            
+                            <form method="POST" class="rating_form" action="">
+                                <input type="hidden" name="tt" value={{item.tt}}>
+                                
+                                <label class="movie-rating">1
+                                <input type="radio" name="stars" value="1" style="display: none"></label>
+
+                                <label class="movie-rating">2
+                                <input type="radio" name="stars" value="2" style="display: none"></label>
+
+                                <label class="movie-rating">3
+                                <input type="radio" name="stars" value="3" style="display: none"></label>
+    
+                                <label class="movie-rating">4
+                                <input type="radio" name="stars" value="4" style="display: none"></label>
+
+                                <label class="movie-rating">5
+                                <input type="radio" name="stars" value="5" style="display: none"></label>
+
+                                <!--<input type="submit" value="rate this" id="submitButton">-->
+                            </form>
+                        </td>
+                        
+                            <td class="average" name="average" id={{item.tt}}>{{item.average}}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        /* global $ */
+        console.log("test");
+    
+        $( "#movie-table" ).on("click", "input[type=radio]", function(event) {
+        
+            
+            console.log($(this).closest(".rating_form").find("[name=tt]").val());
+            console.log($(this).val());
+            
+            const tt = $(this).closest(".rating_form").find("[name=tt]").val();
+            const rating = $(this).val();
+            
+            $.post("http://cs304-karinahlin.c9users.io:8081/updateRatingAjax/",{"tt": tt, "rating": rating}, updateAvgRating);
+          
+        
+            function updateAvgRating(obj) {
+                if(obj.error) {
+                    $("#errors").empty().html('Error: '+obj.err);
+                } else {
+                    $("#"+obj.tt)
+                        .html(obj.average);
+                }
+            }
+            
+        });
+
+    </script>
+    </body>
+{% endblock %}
+</html>

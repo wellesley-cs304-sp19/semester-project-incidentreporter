@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang='en'>
+<link type="text/css"
+          rel="stylesheet"
+          href="{{ url_for('static', filename = 'style.css') }}">
+<head>
+    <meta charset='utf-8'>
+    <meta name=author content="Karina Lin, Julia Klugherz, Katherine Gao">
+    <title>{{title}}</title>
+    
+    {% block headstuff %}{% endblock %}
+</head>
+<body>
+    
+    <a href = 'http://cs304-karinahlin.c9users.io:8081/'>Home</a> ~ 
+    
+    {% if userInfo.role == "student" %}
+    <a href = 'http://cs304-karinahlin.c9users.io:8081/studentInbox'>Incidents You've Reported</a> ~ 
+    
+    {% else %}
+    <a href = 'http://cs304-karinahlin.c9users.io:8081/facStaffInbox'>Incidents Reported Against You</a> ~ 
+    {% endif %}
+    
+    {% if userInfo.isAdmin %}
+    <a href = 'http://cs304-karinahlin.c9users.io:8081/adminInbox'>All Incidents</a> ~ 
+    {% endif %}
+<p>
+{% with messages = get_flashed_messages() %}
+   {% if messages %}
+      {% for message in messages %}
+         <p>{{ message }}</p>
+      {% endfor %}
+   {% endif %}
+{% endwith %}
+</p>
+
+
+<p>
+    <h1>
+        {% if userID %}
+        You are logged in as user number {{ userID }}
+        {% endif %}
+    </h1>
+    
+            <form method="POST" id="form" action="/setUID/">
+                <label for="user_id">User ID:</label>
+                    <input type="text" name="user_id" id='user_id'><br>
+            </form>
+            
+            <button type="submit" form="form" value="Submit">Submit</button>
+            
+</p>
+
+<div class="form-body">
+{% block content %}
+
+<h1>{{title}}</h1>
+
+{% endblock %}
+</div>
+<footer>
+    {% block footer %}
+    Created as a final project for CS304
+    {% endblock %}
+</footer>
+
+</body>
+</html>
