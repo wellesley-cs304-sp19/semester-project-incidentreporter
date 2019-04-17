@@ -20,74 +20,91 @@ def getUserInformation(conn, userID):
     except:
         return None
         
-def getAllMovies(conn):
-    curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    try: 
-        curs.execute('''select movie.tt as tt, movie.title as title, movie.`release` as `release`, 
-        movie.director as director, movie.addedby as addedby, movie.avg_rating as average, 
-        person.name as directorName from movie 
-        left join person on movie.director = person.nm''') 
-        return curs.fetchall()
-    except: # Handle duplicate entries where tt already exist
-        return False
         
-
-        
-def calculateAverage(conn, tt):
+# Gets all incidents reported about a specific facstaff user by their BNUM
+def getAllIncidentsByBNUM(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select * from incident where reportedID=%s''', [BNUM])
+    return curs.fetchall()
     
-    try:
-        curs.execute('''UPDATE movie SET movie.avg_rating = (SELECT AVG(rating) 
-        from rating where rating.tt= %s) WHERE movie.tt = %s;''', [tt, tt])
-        conn.commit()
-        
-        curs.execute('''SELECT avg_rating from movie where tt = %s''', [tt])
-        
-        return curs.fetchone()
-    except:  
-        return False
-
-def getMovieByTitle(conn, title):
+# Gets all reported incidents (for admin view)
+def getAllIncidents(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    try:
-        curs.execute('''select movie.tt as tt, movie.title as title, movie.`release` as `release`, 
-        movie.director as director, movie.addedby as addedby, movie.avg_rating as average, 
-        person.name as directorName from movie 
-        left join person on movie.director = person.nm where title REGEXP %s''', [title]) 
-        return curs.fetchall()
-    except:
-        return None
+    curs.execute('''select * from incident''')
+    return curs.fetchall()
+        
+# def getAllMovies(conn):
+#     curs = conn.cursor(MySQLdb.cursors.DictCursor)
+#     try: 
+#         curs.execute('''select movie.tt as tt, movie.title as title, movie.`release` as `release`, 
+#         movie.director as director, movie.addedby as addedby, movie.avg_rating as average, 
+#         person.name as directorName from movie 
+#         left join person on movie.director = person.nm''') 
+#         return curs.fetchall()
+#     except: # Handle duplicate entries where tt already exist
+#         return False
+        
+
+        
+# def calculateAverage(conn, tt):
+#     curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    
+#     try:
+#         curs.execute('''UPDATE movie SET movie.avg_rating = (SELECT AVG(rating) 
+#         from rating where rating.tt= %s) WHERE movie.tt = %s;''', [tt, tt])
+#         conn.commit()
+        
+#         curs.execute('''SELECT avg_rating from movie where tt = %s''', [tt])
+        
+#         return curs.fetchone()
+#     except:  
+#         return False
+
+# def getMovieByTitle(conn, title):
+#     curs = conn.cursor(MySQLdb.cursors.DictCursor)
+#     try:
+#         curs.execute('''select movie.tt as tt, movie.title as title, movie.`release` as `release`, 
+#         movie.director as director, movie.addedby as addedby, movie.avg_rating as average, 
+#         person.name as directorName from movie 
+#         left join person on movie.director = person.nm where title REGEXP %s''', [title]) 
+#         return curs.fetchall()
+#     except:
+#         return None
             
         
-def updateUserRating(conn, uid, tt, rating):
-    curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select * from rating where tt=%s and uid= %s''', [tt, uid])
-    updateRating = curs.fetchone()
+# def updateUserRating(conn, uid, tt, rating):
+#     curs = conn.cursor(MySQLdb.cursors.DictCursor)
+#     curs.execute('''select * from rating where tt=%s and uid= %s''', [tt, uid])
+#     updateRating = curs.fetchone()
         
-    if updateRating:
-        try:
-            curs.execute('''UPDATE rating
-                        SET rating = %s
-                        WHERE tt=%s and uid = %s''', [rating, tt, uid])
-            conn.commit()
-            return True
-        except:  
-            return False
-    else:
-        try:
-            curs.execute('''INSERT INTO rating
-                        (uid, tt, rating)
-                        VALUES (%s, %s, %s)''', [uid,tt,rating])
-            conn.commit()
-            return True
-        except:  
-            return False
+#     if updateRating:
+#         try:
+#             curs.execute('''UPDATE rating
+#                         SET rating = %s
+#                         WHERE tt=%s and uid = %s''', [rating, tt, uid])
+#             conn.commit()
+#             return True
+#         except:  
+#             return False
+#     else:
+#         try:
+#             curs.execute('''INSERT INTO rating
+#                         (uid, tt, rating)
+#                         VALUES (%s, %s, %s)''', [uid,tt,rating])
+#             conn.commit()
+#             return True
+#         except:  
+#             return False
+
+
+    
 
         
 if __name__ == '__main__':
-    conn = getConn('wmdb')
-    print(updateUserRating(conn, 12, 666, 4))
-    print(updateUserRating(conn, 14, 666, 5))
-    print(updateUserRating(conn, 14, 666, 3))
-    print(calculateAverage(conn, 666))
-    
+    conn = getConn('c9')
+    # print(updateUserRating(conn, 12, 666, 4))
+    # print(updateUserRating(conn, 14, 666, 5))
+    # print(updateUserRating(conn, 14, 666, 3))
+    # print(calculateAverage(conn, 666))
+    print(getAllIncidents(conn, 10000000))
+    print(getAllIncidents(conn, 1))
