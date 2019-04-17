@@ -106,5 +106,5 @@ if __name__ == '__main__':
     # print(updateUserRating(conn, 14, 666, 5))
     # print(updateUserRating(conn, 14, 666, 3))
     # print(calculateAverage(conn, 666))
-    print(getAllIncidents(conn, 10000000))
-    print(getAllIncidents(conn, 1))
+    print(getAllIncidentsByBNUM(conn, 10000000))
+    print(getAllIncidentsByBNUM(conn, 1))

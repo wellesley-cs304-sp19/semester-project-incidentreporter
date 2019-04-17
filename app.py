@@ -14,15 +14,19 @@ def home():
         
     except:
         uid = None
-        
+    
+    conn = incidentReporter.getConn('c9')   
     if uid:
-        conn = incidentReporter.getConn('c9')
         print (uid)
         userInfo = incidentReporter.getUserInformation(conn, uid)
         print(userInfo)
-    return render_template('home.html',
-                            userID = uid, 
-                            userInfo = userInfo)
+        return render_template('home.html',
+                                userID = uid, 
+                                userInfo = userInfo)
+    else:
+        userInfo = None
+        return render_template('home.html', userID=uid, userInfo=userInfo)
+        
 
 # @app.route('/rateMovie/', methods=['GET','POST'])
 # def rate_movie(searchTerm=None, json=None):
