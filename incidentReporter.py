@@ -38,7 +38,6 @@ def getAllIncidents(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select * from incident''')
     return curs.fetchall()
-        
 
         
 if __name__ == '__main__':
