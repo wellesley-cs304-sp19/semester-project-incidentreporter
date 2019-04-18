@@ -15,6 +15,8 @@ insert into user (BNUM, name, email, isAdmin, role) values (40000000, "FacStaff 
 
 delete from incident; 
 insert into incident (reporterID, reportedID, advocateID, location, category, dateOfIncident, anonymousToAll, anonymousToReported, description) 
-    values (00000001, 10000000, 20000000, "sci", "racism", "06-02-2019", false, false, "test");
+    values (00000001, 10000000, 20000000, "sci", "racism", date('2019-04-15'), false, false, "test");
+insert into incident (reporterID, reportedID, advocateID, location, category, dateOfIncident, anonymousToAll, anonymousToReported, description) 
+    values (00000001, 10000000, 20000000, "sci", "racism", date('2019-04-15'), true, true, "test");
 
 

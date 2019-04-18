@@ -23,9 +23,15 @@ def home():
     else:
         userInfo = None
         return render_template('home.html', userID=uid, userInfo=userInfo)
-        
+       
+@app.route('/setUID/', methods=['POST'])
+def setUID():
+    if request.method == 'POST':
+        uid = request.form.get('user_id')
+        session['UID'] = uid
+        return redirect(url_for('home'))
 
-@app.route('/studentInbox')
+@app.route('/studentInbox/')
 def studentInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
@@ -35,17 +41,17 @@ def studentInbox():
     return render_template('inbox.html', userInfo=userInfo, incidentsList=incidentsList)
     
     
-    
-@app.route('/facstaffInbox')
+@app.route('/facstaffInbox/')
 def facstaffInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
+    print(incidentsList)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, incidentsList=incidentsList)
 
     
-@app.route('/adminInbox')
+@app.route('/adminInbox/')
 def adminInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
@@ -76,14 +82,6 @@ def adminInbox():
 #                           userID = uid)
 
 
-# @app.route('/setUID/', methods=['POST'])
-# def setUID():
-#     if request.method == 'POST':
-#         uid = request.form.get('user_id')
-#         session['UID'] = uid
-        
-#         return redirect(request.referrer)
-               
 # @app.route('/updateRating/', methods=['POST'])
 # def updateRating():
     
