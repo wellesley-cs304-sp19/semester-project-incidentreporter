@@ -4,38 +4,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<body>
-    Incident ID: {{incident.reportID}} <br>
-    {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
-        <!-- Only for admin and facstaff --> 
-        Reporter: <!-- Anonymize if necessary -->
-    {% endif %}  
-    
-    {% if userInfo.role == "facstaff" %}
-        {% if incident.anonymousToReported %}
-            Anonymous
-        {% else %}
-            {{incident.reporterID}}
+    <body>
+        Incident ID: {{incident.reportID}} <br>
+        {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
+            <!-- Only for admin and facstaff --> 
+            Reporter: <!-- Anonymize if necessary -->
+        {% endif %}  
+        
+        {% if userInfo.role == "facstaff" %}
+            {% if incident.anonymousToReported %}
+                Anonymous
+            {% else %}
+                {{incident.reporterID}}
+            {% endif %}
         {% endif %}
-    {% endif %}
-    
-    {% if userInfo.isAdmin %}
-        {% if incident.anonymousToAll %}
-            <td>Anonymous</td>
-        {% else %}
-            <td>{{incident.name}}</td> 
+        
+        {% if userInfo.isAdmin %}
+            {% if incident.anonymousToAll %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.name}}</td> 
+            {% endif %}
         {% endif %}
-    {% endif %}
-    <br>
-    
-    Reported: {{incident.reportedID}} <br>
-    Advocate: {{incident.advocateID}} <br>
-    location: {{incident.location}} <br>
-    category: {{incident.category}} <br>
-    dateOfIncident: {{incident.dateOfIncident}} <br>
-    description: {{incident.description}}
-    
-    
+        <br>
+        
+        Reported: {{incident.reportedID}} <br>
+        Advocate: {{incident.advocateID}} <br>
+        location: {{incident.location}} <br>
+        category: {{incident.category}} <br>
+        dateOfIncident: {{incident.dateOfIncident}} <br>
+        description: {{incident.description}}
+        
     </body>
 {% endblock %}
 </html>
