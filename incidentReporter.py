@@ -38,6 +38,11 @@ def getAllIncidents(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select * from incident''')
     return curs.fetchall()
+    
+def getIncidentInfo(conn, id):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select * from incident where reportID = %s''', [id])
+    return curs.fetchone()
         
 
         

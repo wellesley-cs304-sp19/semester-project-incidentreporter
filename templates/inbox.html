@@ -25,6 +25,8 @@
                     <th>Description</th> 
                     {% endif %}
                     
+                    <th>Details</th>
+                    
                 </tr>
                 {% for incident in incidentsList %}
                     
@@ -37,7 +39,7 @@
                             {% if incident.anonymousToReported %}
                             <td>Anonymous</td>
                             {% else %}
-                            <td>{{incident.name}}</td> 
+                            <td>{{incident.reporterID}}</td> 
                             {% endif %}
                         {% endif %}
                         
@@ -45,22 +47,29 @@
                             {% if incident.anonymousToAll %}
                             <td>Anonymous</td>
                             {% else %}
-                            <td>{{incident.name}}</td> 
+                            <td>{{incident.reporterID}}</td> 
                             {% endif %}
                         {% endif %}
                         
                         <!-- ReportedID -->
                         {% if userInfo.role == "student" or userInfo.isAdmin %}
-                        <td>{{incident.name}}</td> 
+                        <td>{{incident.reportedID}}</td> 
                         {% endif %}
                     
                         <!-- Description -->
                         {% if userInfo.role == "student"%}
                         <td>{{incident.description}}</td> 
                         {% endif %}
+                        
+                        <td>
+                            <form action="{{ url_for('incidentDetailPage', id=incident.reportID) }}">
+                                <input type="submit" value="More Details">
+                            </form>
+                        </td>
                     </tr>
                 {% endfor %}
             </table>
+            
     </body>
 {% endblock %}
 </html>

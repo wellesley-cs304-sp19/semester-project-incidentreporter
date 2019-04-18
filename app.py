@@ -31,6 +31,17 @@ def setUID():
         session['UID'] = uid
         return redirect(url_for('home'))
 
+@app.route('/incidentDetailPage/<id>')
+def incidentDetailPage(id):
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    print(userInfo)
+    incidentInfo = incidentReporter.getIncidentInfo(conn, id)
+    print(incidentInfo)
+    return render_template('incidentDetailPage.html', userInfo=userInfo, userID=uid, incident=incidentInfo)
+    
+    
 @app.route('/studentInbox/')
 def studentInbox():
     conn = incidentReporter.getConn('c9')   
