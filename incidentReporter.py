@@ -22,9 +22,15 @@ def getUserInformation(conn, userID):
         
         
 # Gets all incidents reported about a specific facstaff user by their BNUM
-def getAllIncidentsByBNUM(conn, BNUM):
+def getAllReportedFacstaff(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select * from incident where reportedID=%s''', [BNUM])
+    return curs.fetchall()
+    
+# Gets all incidents reported about a specific facstaff user by their BNUM
+def getAllReportedStudent(conn, BNUM):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select * from incident where reporterID=%s''', [BNUM])
     return curs.fetchall()
     
 # Gets all reported incidents (for admin view)

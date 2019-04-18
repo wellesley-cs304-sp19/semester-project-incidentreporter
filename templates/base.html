@@ -19,14 +19,14 @@
     
     {% else%}
     {% if userInfo.role == "student" %}
-    <a href = 'http://cs304-karinahlin.c9users.io:8081/studentInbox'>Incidents You've Reported</a> ~ 
+    <a href = "{{url_for('studentInbox')}}">Incidents You've Reported</a> ~ 
     
     {% else %}
-    <a href = 'http://cs304-karinahlin.c9users.io:8081/facStaffInbox'>Incidents Reported Against You</a> ~ 
+    <a href = "{{url_for('facstaffInbox')}}">Incidents Reported Against You</a> ~ 
     {% endif %}
     
     {% if userInfo.isAdmin %}
-    <a href = 'http://cs304-karinahlin.c9users.io:8081/adminInbox'>All Incidents</a> ~ 
+    <a href = "{{url_for('adminInbox')}}">All Incidents</a> ~ 
     {% endif %}
     {% endif %}
 <p>

@@ -8,13 +8,10 @@ app.secret_key = 'secretkey123'
 
 @app.route('/')
 def home():
-    
     try:
         uid = session['UID']
-        
     except:
         uid = None
-    
     conn = incidentReporter.getConn('c9')   
     if uid:
         print (uid)
@@ -27,6 +24,35 @@ def home():
         userInfo = None
         return render_template('home.html', userID=uid, userInfo=userInfo)
         
+
+@app.route('/studentInbox')
+def studentInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
+    print(incidentsList)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, incidentsList=incidentsList)
+    
+    
+    
+@app.route('/facstaffInbox')
+def facstaffInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, incidentsList=incidentsList)
+
+    
+@app.route('/adminInbox')
+def adminInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllIncidents(conn)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, incidentsList=incidentsList)
+
 
 # @app.route('/rateMovie/', methods=['GET','POST'])
 # def rate_movie(searchTerm=None, json=None):

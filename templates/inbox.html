@@ -5,81 +5,62 @@
 
 {% block content %}
 <body>
-
-            <table id="movie-table" style="width:100%" >
+            <table id="incident-list" style="width:100%" >
                 <tr>
-                    <th>Title</th>
-                    <th>Director</th> 
-                    <th>Release</th>
-                    <th>Feature</th>
-                    <th>My Rating</th>
-                    <th>Average Rating</th>
+                    <th>Report ID</th>
+                    <th>Incident Date</th>
+                    
+                    {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
+                    <!-- Only for admin and facstaff --> 
+                    <th>Reporter</th> <!-- Anonymize if necessary -->
+                    {% endif %}
+                    
+                    {% if userInfo.role == "student" or userInfo.isAdmin %}
+                    <!-- Only for student and admin -->
+                    <th>Reported</th> <!-- Will be ID, maybe we can do an inner join to get the name of this person later on -->
+                    {% endif %}
+                    
+                    {% if userInfo.role == "student"%}
+                    <!-- Only for student -->
+                    <th>Description</th> 
+                    {% endif %}
+                    
                 </tr>
-                {% for item in movieList %}
+                {% for incident in incidentsList %}
                     
                     <tr>
-                        <td>{{item.title}}</td>
-                        <td>{{item.directorName}}</td>
-                        <td>{{item.release}}</td>
-                        <td><button type="button">Feature This!</button></td>
-                        <td>
-                            
-                            <form method="POST" class="rating_form" action="">
-                                <input type="hidden" name="tt" value={{item.tt}}>
-                                
-                                <label class="movie-rating">1
-                                <input type="radio" name="stars" value="1" style="display: none"></label>
-
-                                <label class="movie-rating">2
-                                <input type="radio" name="stars" value="2" style="display: none"></label>
-
-                                <label class="movie-rating">3
-                                <input type="radio" name="stars" value="3" style="display: none"></label>
-    
-                                <label class="movie-rating">4
-                                <input type="radio" name="stars" value="4" style="display: none"></label>
-
-                                <label class="movie-rating">5
-                                <input type="radio" name="stars" value="5" style="display: none"></label>
-
-                                <!--<input type="submit" value="rate this" id="submitButton">-->
-                            </form>
-                        </td>
+                        <td>{{incident.reportID}}</td>
+                        <td>{{incident.dateOfIncident}}</td>
                         
-                            <td class="average" name="average" id={{item.tt}}>{{item.average}}</td>
+                        <!-- Reporter ID is anonymized if necessary-->
+                        {% if userInfo.role == "facstaff" %}
+                            {% if incident.anonymousToReported %}
+                            <td>Anonymous</td>
+                            {% else %}
+                            <td>{{incident.reporterID}}</td> 
+                            {% endif %}
+                        {% endif %}
+                        
+                        {% if userInfo.isAdmin %}
+                            {% if incident.anonymousToAll %}
+                            <td>Anonymous</td>
+                            {% else %}
+                            <td>{{incident.reporterID}}</td> 
+                            {% endif %}
+                        {% endif %}
+                        
+                        <!-- ReportedID -->
+                        {% if userInfo.role == "student" or userInfo.isAdmin %}
+                        <td>{{incident.reportedID}}</td> 
+                        {% endif %}
+                    
+                        <!-- Description -->
+                        {% if userInfo.role == "student"%}
+                        <td>{{incident.description}}</td> 
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </table>
-            
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script>
-        /* global $ */
-        console.log("test");
-    
-        $( "#movie-table" ).on("click", "input[type=radio]", function(event) {
-        
-            
-            console.log($(this).closest(".rating_form").find("[name=tt]").val());
-            console.log($(this).val());
-            
-            const tt = $(this).closest(".rating_form").find("[name=tt]").val();
-            const rating = $(this).val();
-            
-            $.post("http://cs304-karinahlin.c9users.io:8081/updateRatingAjax/",{"tt": tt, "rating": rating}, updateAvgRating);
-          
-        
-            function updateAvgRating(obj) {
-                if(obj.error) {
-                    $("#errors").empty().html('Error: '+obj.err);
-                } else {
-                    $("#"+obj.tt)
-                        .html(obj.average);
-                }
-            }
-            
-        });
-
-    </script>
     </body>
 {% endblock %}
 </html>
