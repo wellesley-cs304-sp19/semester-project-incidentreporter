@@ -46,6 +46,12 @@ def getAllIncidents(conn):
     curs.execute('''select * from incident inner join user as reporter inner join 
                     user as reported where reporterID=reporter.BNUM and reportedID=reported.BNUM''')
     return curs.fetchall()
+    
+def getIncidentInfo(conn, id):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select * from incident where reportID = %s''', [id])
+    return curs.fetchone()
+        
 
 if __name__ == '__main__':
     conn = getConn('c9')
