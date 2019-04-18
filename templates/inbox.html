@@ -33,7 +33,7 @@
                         <td>{{incident.dateOfIncident}}</td>
                         
                         <!-- Reporter name (for facstaff and admin) -->
-                        {% if userInfo.role == "facstaff" %}
+                        {% if userInfo.role == "facstaff" and not userInfo.isAdmin %}
                             {% if incident.anonymousToReported %}
                             <td>Anonymous</td>
                             {% else %}
@@ -50,12 +50,12 @@
                         {% endif %}
                         
                         <!-- Reported name (for student or admin) -->
-                        {% if userInfo.role == "student" or userInfo.isAdmin %}
+                        {% if userInfo.role == "student" %}
                         <td>{{incident.name}}</td> 
                         {% endif %}
                         
                         {% if userInfo.isAdmin %}
-                        <td>{{incident.name}}</td> 
+                        <td>{{incident["reported.name"]}}</td> 
                         {% endif %}
                     
                         <!-- Description -->

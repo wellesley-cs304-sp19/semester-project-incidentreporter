@@ -33,14 +33,22 @@ def getAllReportedStudent(conn, BNUM):
     curs.execute('''select * from incident inner join user where reportedID=BNUM and reporterID=%s''', [BNUM])
     return curs.fetchall()
     
+# # Gets all reported incidents (for admin view)
+# def getAllIncidents(conn):
+#     curs = conn.cursor(MySQLdb.cursors.DictCursor)
+#     curs.execute('''select * from incident ''')
+#     return curs.fetchall()
+    
 # Gets all reported incidents (for admin view)
+# For some reason I'm getting reported.name... etc but not reporter.name, the reporter just shows up as "name"
 def getAllIncidents(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select * from incident''')
+    curs.execute('''select * from incident inner join user as reporter inner join 
+                    user as reported where reporterID=reporter.BNUM and reportedID=reported.BNUM''')
     return curs.fetchall()
 
-        
 if __name__ == '__main__':
     conn = getConn('c9')
     # print(getAllReportedFacstaff(conn, 10000000))
-    print(getAllReportedStudent(conn, 1))
+    # print(getAllReportedStudent(conn, 1))
+    print(getAllIncidents(conn))
