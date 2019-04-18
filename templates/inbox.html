@@ -37,7 +37,7 @@
                             {% if incident.anonymousToReported %}
                             <td>Anonymous</td>
                             {% else %}
-                            <td>{{incident.reporterID}}</td> 
+                            <td>{{incident.name}}</td> 
                             {% endif %}
                         {% endif %}
                         
@@ -45,13 +45,13 @@
                             {% if incident.anonymousToAll %}
                             <td>Anonymous</td>
                             {% else %}
-                            <td>{{incident.reporterID}}</td> 
+                            <td>{{incident.name}}</td> 
                             {% endif %}
                         {% endif %}
                         
                         <!-- ReportedID -->
                         {% if userInfo.role == "student" or userInfo.isAdmin %}
-                        <td>{{incident.reportedID}}</td> 
+                        <td>{{incident.name}}</td> 
                         {% endif %}
                     
                         <!-- Description -->

@@ -21,16 +21,16 @@ def getUserInformation(conn, userID):
         return None
         
         
-# Gets all incidents reported about a specific facstaff user by their BNUM
+# Gets all incidents reported about a specific facstaff user by their BNUM, and also the name of the students who reported
 def getAllReportedFacstaff(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select * from incident where reportedID=%s''', [BNUM])
+    curs.execute('''select * from incident inner join user where reporterID=BNUM and reportedID=%s''', [BNUM])
     return curs.fetchall()
     
-# Gets all incidents reported about a specific facstaff user by their BNUM
+# Gets all incidents reported by a specific student by their BNUM, and also the names of facstaff
 def getAllReportedStudent(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select * from incident where reporterID=%s''', [BNUM])
+    curs.execute('''select * from incident inner join user where reportedID=BNUM and reporterID=%s''', [BNUM])
     return curs.fetchall()
     
 # Gets all reported incidents (for admin view)
@@ -43,5 +43,5 @@ def getAllIncidents(conn):
         
 if __name__ == '__main__':
     conn = getConn('c9')
-    print(getAllIncidentsByBNUM(conn, 10000000))
-    print(getAllIncidentsByBNUM(conn, 1))
+    # print(getAllReportedFacstaff(conn, 10000000))
+    print(getAllReportedStudent(conn, 1))
