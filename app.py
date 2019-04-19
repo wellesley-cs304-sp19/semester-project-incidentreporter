@@ -27,7 +27,7 @@ def setUID():
     if request.method == 'POST':
         uid = request.form.get('user_id')
         session['UID'] = uid
-        return redirect(url_for('home'))
+        return redirect(url_for('incidentReport'))
 
 @app.route('/incidentDetailPage/<id>')
 def incidentDetailPage(id):
@@ -44,14 +44,23 @@ def incidentDetailPage(id):
 def incidentReport():
     conn = incidentReporter.getConn('c9')
     uid = session.get('uid','')
-    name = request.form['rname']
-    rID = incidentReporter.getReportedID(conn, name)
-    # a person cannot report themselves
-    if uid == rID:
-        flash('Error: you cannot report yourself')
-        return redirect(request.referrer)
-    # update database with information from a valid report
-    
+    if request.method == 'GET':
+        userInfo = incidentReporter.getUserInformation(conn, uid)
+        return render_template('incidentReport.html', userID = uid, 
+                                userInfo = userInfo)
+    else:
+        rName = request.form['rname']
+        aName = request.form['advocate']
+        rID = incidentReporter.getIDFromName(conn, rName)
+        aID = incidentReporter.getIDFromName(conn, aName)
+        # a person cannot report themselves
+        if uid == rID:
+            flash('Error: you cannot report yourself')
+            return redirect(request.referrer)
+        # update database with information from a valid report
+        info = request.form
+        incidentReporter.insertIncident(conn, info, uid, rID, aID)
+        return redirect(url_for('studentInbox'))
 
 @app.route('/studentInbox/')
 def studentInbox():

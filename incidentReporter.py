@@ -24,7 +24,7 @@ def getUserInformation(conn, userID):
 # ***will not need this in the alpha version ideally because we will change 
 # the incident reporting form so that this form element will be a drop down
 # menu with options of factulry rather than a free for all text box***
-def getReportedID(conn, name): 
+def getIDFromName(conn, name): 
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select BNUM from user where name=%s''', [name])
     return curs.fetchall()
