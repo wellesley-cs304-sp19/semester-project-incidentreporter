@@ -18,7 +18,7 @@
     {% else%}
     {% if userInfo.role == "student" %}
     <a href = "{{url_for('studentInbox')}}">Incidents You've Reported</a> ~ 
-    
+    <a href = "{{url_for('incidentReport')}}"> Report an Incident</a> ~
     {% else %}
     <a href = "{{url_for('facstaffInbox')}}">Incidents Reported Against You</a> ~ 
     {% endif %}
