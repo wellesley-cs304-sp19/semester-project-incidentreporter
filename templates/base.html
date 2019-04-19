@@ -1,8 +1,6 @@
 <!doctype html>
 <html lang='en'>
-<link type="text/css"
-          rel="stylesheet"
-          href="{{ url_for('static', filename = 'style.css') }}">
+<link rel='stylesheet' href="{{url_for('static',filename='report-style.css')}}">
 <head>
     <meta charset='utf-8'>
     <meta name=author content="Karina Lin, Julia Klugherz, Katherine Gao">
@@ -52,7 +50,7 @@
                     <input type="text" name="user_id" id='user_id'><br>
             </form>
             
-            <button type="submit" form="form" value="Submit">Submit</button>
+            <button id='loginbutton' type="submit" form="form" value="Submit">Submit</button>
             
 </p>
 
