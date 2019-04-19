@@ -19,7 +19,27 @@ def getUserInformation(conn, userID):
         return curs.fetchone()
     except:
         return None
-        
+
+# Gets the UID of the person who is being reported based on the given name
+# ***will not need this in the alpha version ideally because we will change 
+# the incident reporting form so that this form element will be a drop down
+# menu with options of factulry rather than a free for all text box***
+def getReportedID(conn, name): 
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select BNUM from user where name=%s''', [name])
+    return curs.fetchall()
+    
+def insertIncident(conn, form, uid, rID, aID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    add = ("insert into incident " 
+           "(reporterID,reportedID,advocateID,location,category,dateOfIncident,anonymousToAll,anonymousToReported,description)"
+           "values(%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+    values = (uid,rID,aID,
+              form['location'],form['category'],form['date'],
+              form['anon-all'],form['anon-r'],form['description'])
+    curs.execute(add, values)
+    conn.commit()
+    
         
 # Gets all incidents reported about a specific facstaff user by their BNUM, and also the name of the students who reported
 def getAllReportedFacstaff(conn, BNUM):

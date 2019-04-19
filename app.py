@@ -1,5 +1,3 @@
-
-
 from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify)
 import  incidentReporter, sys, json
 
@@ -41,7 +39,20 @@ def incidentDetailPage(id):
     print(incidentInfo)
     return render_template('incidentDetailPage.html', userInfo=userInfo, userID=uid, incident=incidentInfo)
     
+# This function 
+@app.route('/incidentReport', methods=['POST', 'GET'])
+def incidentReport():
+    conn = incidentReporter.getConn('c9')
+    uid = session.get('uid','')
+    name = request.form['rname']
+    rID = incidentReporter.getReportedID(conn, name)
+    # a person cannot report themselves
+    if uid == rID:
+        flash('Error: you cannot report yourself')
+        return redirect(request.referrer)
+    # update database with information from a valid report
     
+
 @app.route('/studentInbox/')
 def studentInbox():
     conn = incidentReporter.getConn('c9')   

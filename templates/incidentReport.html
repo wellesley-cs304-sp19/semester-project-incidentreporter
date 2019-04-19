@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+
+{% extends "base.html" %}
+
+{% block content %}
+
+
+
+<form action="/incidentReport" method="post">
+    
+    <span class='reporter-info'>
+        <p>Reporter Information</p>
+    <label for="sname"> Reporter Name:
+        <input id="sname" type="text" name="sname" size="30" placeholder="Wendy Wellesley" autofocus>
+    </label> <br>
+    
+    <!--- In the alpha version, we should add in form validation and have the 
+          information for possible people who are being reported pull from
+          the facstaff column in the database --->
+          
+    <label> Do you want to remain anonymous to the person you are reporting?
+       <input type="radio" name="anon-r" value="1">
+       <span class="radio-body">Yes</span>
+    </label>
+    <label>
+       <input type="radio" name="anon-r" value="0">
+       <span class="radio-body">No</span>
+    </label> <br>
+    
+    <label> Do you want to remain anonymous to everyone?
+       <input type="radio" name="anon-all" value="1">
+       <span class="radio-body">Yes</span>
+    </label>
+    <label>
+       <input type="radio" name="anon-all" value="0">
+       <span class="radio-body">No</span>
+    </label> <br>
+    
+    <label for="advocate"> Advocate Name:
+        <input id="advocate" type="text" name="advocate" size="30" placeholder="Trusted Friend" autofocus>
+    </label>
+    
+    
+    </span>
+    
+    <span class='incident-info'>
+    <p> Incident Information </p>
+    
+    <label for="rname"> Who are you reporting?
+        <input id="rname" type="text" name="rname" size="30" autofocus>
+    </label> <br>
+    
+    <label for="location"> Location of Incident:
+        <input id="location" type="text" name="location" size="30" autofocus>
+    </label> <br>
+    
+    <label for="date"> Date of Incident: 
+        <input type="date" id="date" name="date">
+    </label> <br>
+    
+    <label for="category"> Type of Incident: 
+    <select name="category">
+            <option value="">
+            <option>Racism
+            <option>Ableism
+            <option>Sexism
+            <option>Sexual Harassment
+            <option>Other
+        </select>
+    </label> <br>
+    
+    <label for="description"> Description of the incident:
+        <textarea name="description" rows="10" cols="30"> </textarea>
+    </label>
+    </span>
+    
+    <p> <input type='submit' value='Submit'> </p>
+    
+</form>
+    
+    
+
+{% endblock %}
