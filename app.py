@@ -27,7 +27,11 @@ def setUID():
     if request.method == 'POST':
         uid = request.form.get('user_id')
         session['UID'] = uid
-        return redirect(url_for('incidentReport'))
+        
+        conn = incidentReporter.getConn('c9')   
+        userInfo = incidentReporter.getUserInformation(conn, uid)
+        
+        return render_template('home.html', userID=uid, userInfo=userInfo)
 
 @app.route('/incidentDetailPage/<id>')
 def incidentDetailPage(id):
@@ -43,7 +47,7 @@ def incidentDetailPage(id):
 @app.route('/incidentReport', methods=['POST', 'GET'])
 def incidentReport():
     conn = incidentReporter.getConn('c9')
-    uid = session.get('uid','')
+    uid = session['UID']
     if request.method == 'GET':
         userInfo = incidentReporter.getUserInformation(conn, uid)
         return render_template('incidentReport.html', userID = uid, 
@@ -53,6 +57,7 @@ def incidentReport():
         aName = request.form['advocate']
         rID = incidentReporter.getIDFromName(conn, rName)
         aID = incidentReporter.getIDFromName(conn, aName)
+        
         # a person cannot report themselves
         if uid == rID:
             flash('Error: you cannot report yourself')
