@@ -1,0 +1,526 @@
+from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify)
+import  incidentReporter, sys, json
+
+app = Flask(__name__)
+app.secret_key = 'secretkey123'
+
+@app.route('/')
+def home():
+    try:
+        uid = session['UID']
+    except:
+        uid = None
+    conn = incidentReporter.getConn('c9')   
+    if uid:
+        print (uid)
+        userInfo = incidentReporter.getUserInformation(conn, uid)
+        print(userInfo)
+        return render_template('home.html',
+                                userID = uid, 
+                                userInfo = userInfo)
+    else:
+        userInfo = None
+        return render_template('home.html', userID=uid, userInfo=userInfo)
+       
+@app.route('/setUID/', methods=['POST'])
+def setUID():
+    if request.method == 'POST':
+        uid = request.form.get('user_id')
+        session['UID'] = uid
+        
+        conn = incidentReporter.getConn('c9')   
+        userInfo = incidentReporter.getUserInformation(conn, uid)
+        
+        return render_template('home.html', userID=uid, userInfo=userInfo)
+
+@app.route('/incidentDetailPage/<id>')
+def incidentDetailPage(id):
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    print(userInfo)
+    incidentInfo = incidentReporter.getIncidentInfo(conn, id)
+    print(incidentInfo)
+    return render_template('incidentDetailPage.html', userInfo=userInfo, userID=uid, incident=incidentInfo)
+    
+# This function 
+@app.route('/incidentReport', methods=['POST', 'GET'])
+def incidentReport():
+    conn = incidentReporter.getConn('c9')
+    uid = session['UID']
+    if request.method == 'GET':
+        userInfo = incidentReporter.getUserInformation(conn, uid)
+        return render_template('incidentReport.html', userID = uid, 
+                                userInfo = userInfo)
+    else:
+        rName = request.form['rname']
+        aName = request.form['advocate']
+        rID = incidentReporter.getIDFromName(conn, rName)
+        aID = incidentReporter.getIDFromName(conn, aName)
+        
+        # a person cannot report themselves
+        if uid == rID:
+            flash('Error: you cannot report yourself')
+            return redirect(request.referrer)
+        # update database with information from a valid report
+        info = request.form
+        incidentReporter.insertIncident(conn, info, uid, rID, aID)
+        return redirect(url_for('studentInbox'))
+
+@app.route('/studentInbox/')
+def studentInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
+    print(incidentsList)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+    
+    
+@app.route('/facstaffInbox/')
+def facstaffInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
+    print(incidentsList)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+
+    
+@app.route('/adminInbox/')
+def adminInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllIncidents(conn)
+    print(incidentsList)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+
+          
+if __name__ == '__main__':
+    app.debug = True
+    app.run('0.0.0.0',8081)
+import sys
+import MySQLdb
+
+ADDED_BY = 1341
+    
+def getConn(db):
+    conn = MySQLdb.connect(host='localhost',
+                           user='ubuntu',
+                           passwd='',
+                           db=db)
+    return conn
+    
+
+def getUserInformation(conn, userID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    try:
+        
+        curs.execute('''select * from user where BNUM = %s''', [userID])
+        return curs.fetchone()
+    except:
+        return None
+
+# Gets the UID of the person who is being reported based on the given name
+# ***will not need this in the alpha version ideally because we will change 
+# the incident reporting form so that this form element will be a drop down
+# menu with options of factulry rather than a free for all text box***
+def getIDFromName(conn, name): 
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select BNUM from user where name=%s''', [name])
+    return curs.fetchall()
+    
+def insertIncident(conn, form, uid, rID, aID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    add = ("insert into incident " 
+           "(reporterID,reportedID,advocateID,location,category,dateOfIncident,anonymousToAll,anonymousToReported,description)"
+           "values(%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+    values = (uid,rID,aID,
+              form['location'],form['category'],form['date'],
+              form['anon-all'],form['anon-r'],form['description'])
+    curs.execute(add, values)
+    conn.commit()
+    
+        
+# Gets all incidents reported about a specific facstaff user by their BNUM, and also the name of the students who reported
+def getAllReportedFacstaff(conn, BNUM):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select * from incident inner join user where reporterID=BNUM and reportedID=%s''', [BNUM])
+    return curs.fetchall()
+    
+# Gets all incidents reported by a specific student by their BNUM, and also the names of facstaff
+def getAllReportedStudent(conn, BNUM):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select * from incident inner join user where reportedID=BNUM and reporterID=%s''', [BNUM])
+    return curs.fetchall()
+    
+# # Gets all reported incidents (for admin view)
+# def getAllIncidents(conn):
+#     curs = conn.cursor(MySQLdb.cursors.DictCursor)
+#     curs.execute('''select * from incident ''')
+#     return curs.fetchall()
+    
+# Gets all reported incidents (for admin view)
+# For some reason I'm getting reported.name... etc but not reporter.name, the reporter just shows up as "name"
+def getAllIncidents(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select * from incident inner join user as reporter inner join 
+                    user as reported where reporterID=reporter.BNUM and reportedID=reported.BNUM''')
+    return curs.fetchall()
+    
+def getIncidentInfo(conn, id):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select * from incident where reportID = %s''', [id])
+    return curs.fetchone()
+        
+
+if __name__ == '__main__':
+    conn = getConn('c9')
+    # print(getAllReportedFacstaff(conn, 10000000))
+    # print(getAllReportedStudent(conn, 1))
+    print(getAllIncidents(conn))
+<!doctype html>
+<html lang='en'>
+<link rel='stylesheet' href="{{url_for('static',filename='report-style.css')}}">
+<head>
+    <meta charset='utf-8'>
+    <meta name=author content="Karina Lin, Julia Klugherz, Katherine Gao">
+    <title>{{title}}</title>
+    
+    {% block headstuff %}{% endblock %}
+</head>
+<body>
+    
+    <a href = "{{url_for('home')}}">Home</a> ~ 
+    
+    {% if userInfo == None %}
+    <p>Please log in.</p>
+    
+    {% else%}
+    {% if userInfo.role == "student" %}
+    <a href = "{{url_for('studentInbox')}}">Incidents You've Reported</a> ~ 
+    <a href = "{{url_for('incidentReport')}}"> Report an Incident</a> ~
+    {% else %}
+    <a href = "{{url_for('facstaffInbox')}}">Incidents Reported Against You</a> ~ 
+    {% endif %}
+    
+    {% if userInfo.isAdmin %}
+    <a href = "{{url_for('adminInbox')}}">All Incidents</a> ~ 
+    {% endif %}
+    {% endif %}
+<p>
+{% with messages = get_flashed_messages() %}
+   {% if messages %}
+      {% for message in messages %}
+         <p>{{ message }}</p>
+      {% endfor %}
+   {% endif %}
+{% endwith %}
+</p>
+
+
+<p>
+    <h1>
+        {% if userID %}
+        You are logged in as user number {{ userID }}
+        {% endif %}
+    </h1>
+    
+            <form method="POST" id="form" action="/setUID/">
+                <label for="user_id">User ID:</label>
+                    <input type="text" name="user_id" id='user_id'><br>
+            </form>
+            
+            <button id='loginbutton' type="submit" form="form" value="Submit">Submit</button>
+            
+</p>
+
+<div class="form-body">
+{% block content %}
+
+<h1>{{title}}</h1>
+
+{% endblock %}
+</div>
+<footer>
+    {% block footer %}
+    <br>
+    <br>
+    Created as a final project for CS304
+    {% endblock %}
+</footer>
+
+</body>
+</html>
+<!--author: Karina Lin-->
+
+{% extends "base.html" %}
+
+{% block content %}    
+<div><h1>Home Page</h1></div>
+
+<p>information about the app itself</p>    
+<article>
+    
+</article>
+{% endblock %}<!DOCTYPE html>
+<html lang='en'>
+
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+            <table id="incident-list"  >
+                <tr>
+                    <th>Report ID</th>
+                    <th>Incident Date</th>
+                    
+                    {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
+                    <!-- Only for admin and facstaff --> 
+                    <th>Reporter</th> <!-- Anonymize if necessary -->
+                    {% endif %}
+                    
+                    {% if userInfo.role == "student" or userInfo.isAdmin %}
+                    <!-- Only for student and admin -->
+                    <th>Reported</th> <!-- Will be ID, maybe we can do an inner join to get the name of this person later on -->
+                    {% endif %}
+                    
+                    {% if userInfo.role == "student"%}
+                    <!-- Only for student -->
+                    <th>Description</th> 
+                    {% endif %}
+                    
+                    <th>Details</th>
+                    
+                </tr>
+                {% for incident in incidentsList %}
+                    
+                    <tr>
+                        <td>{{incident.reportID}}</td>
+                        <td>{{incident.dateOfIncident}}</td>
+                        
+                        <!-- Reporter name (for facstaff and admin) -->
+                        {% if userInfo.role == "facstaff" and not userInfo.isAdmin %}
+                            {% if incident.anonymousToReported %}
+                            <td>Anonymous</td>
+                            {% else %}
+                            <td>{{incident.name}}</td> 
+                            {% endif %}
+                        {% endif %}
+                        
+                        {% if userInfo.isAdmin %}
+                            {% if incident.anonymousToAll %}
+                            <td>Anonymous</td>
+                            {% else %}
+                            <td>{{incident.name}}</td> 
+                            {% endif %}
+                        {% endif %}
+                        
+                        <!-- Reported name (for student or admin) -->
+                        {% if userInfo.role == "student" %}
+                        <td>{{incident.name}}</td> 
+                        {% endif %} 
+                        
+                        {% if userInfo.isAdmin %}
+                        <td>{{incident["reported.name"]}}</td> 
+                        {% endif %}
+                    
+                        <!-- Description -->
+                        {% if userInfo.role == "student"%}
+                        <td>{{incident.description}}</td> 
+                        {% endif %}
+                        
+                        <td>
+                            <form action="{{ url_for('incidentDetailPage', id=incident.reportID) }}">
+                                <input type="submit" value="More Details">
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+            
+    </body>
+{% endblock %}
+</html><!DOCTYPE html>
+<html lang='en'>
+
+{% extends "base.html" %}
+
+{% block content %}
+    <body>
+        Incident ID: {{incident.reportID}} <br>
+        {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
+            <!-- Only for admin and facstaff --> 
+            Reporter: <!-- Anonymize if necessary -->
+        {% endif %}  
+        
+        {% if userInfo.role == "facstaff" %}
+            {% if incident.anonymousToReported %}
+                Anonymous
+            {% else %}
+                {{incident.reporterID}}
+            {% endif %}
+        {% endif %}
+        
+        {% if userInfo.isAdmin %}
+            {% if incident.anonymousToAll %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.name}}</td> 
+            {% endif %}
+        {% endif %}
+        <br>
+        
+        Reported: {{incident.reportedID}} <br>
+        Advocate: {{incident.advocateID}} <br>
+        location: {{incident.location}} <br>
+        category: {{incident.category}} <br>
+        dateOfIncident: {{incident.dateOfIncident}} <br>
+        description: {{incident.description}}
+        
+    </body>
+{% endblock %}
+</html><!DOCTYPE html>
+
+
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<form action="/incidentReport" method="post">
+    
+    <span class='reporter-info'>
+        <p>Reporter Information</p>
+    <label for="sname"> Reporter Name:
+        <input id="sname" type="text" name="sname" size="30" placeholder="Wendy Wellesley" autofocus>
+    </label> <br>
+    
+    <!--- In the alpha version, we should add in form validation and have the 
+          information for possible people who are being reported pull from
+          the facstaff column in the database --->
+          
+    <label> Do you want to remain anonymous to the person you are reporting?
+       <input type="radio" name="anon-r" value="1">
+       <span class="radio-body">Yes</span>
+    </label>
+    <label>
+       <input type="radio" name="anon-r" value="0">
+       <span class="radio-body">No</span>
+    </label> <br>
+    
+    <label> Do you want to remain anonymous to everyone?
+       <input type="radio" name="anon-all" value="1">
+       <span class="radio-body">Yes</span>
+    </label>
+    <label>
+       <input type="radio" name="anon-all" value="0">
+       <span class="radio-body">No</span>
+    </label> <br>
+    
+    <label for="advocate"> Advocate Name:
+        <input id="advocate" type="text" name="advocate" size="30" placeholder="Trusted Friend" autofocus>
+    </label>
+    
+    </span>
+    
+    <span class='incident-info'>
+    <p> Incident Information </p>
+    
+    <label for="rname"> Who are you reporting?
+        <input id="rname" type="text" name="rname" size="30" autofocus>
+    </label> <br>
+    
+    <label for="location"> Location of Incident:
+        <input id="location" type="text" name="location" size="30" autofocus>
+    </label> <br>
+    
+    <label for="date"> Date of Incident: 
+        <input type="date" id="date" name="date">
+    </label> <br>
+    
+    <label for="category"> Type of Incident: 
+    <select name="category">
+            <option value="">
+            <option>Racism
+            <option>Ableism
+            <option>Sexism
+            <option>Sexual Harassment
+            <option>Other
+        </select>
+    </label> <br>
+    
+    <label for="description"> Description of the incident:
+        <textarea name="description" rows="10" cols="30"> </textarea>
+    </label>
+    </span>
+    
+    <p> <input type='submit' value='Submit'> </p>
+    
+</form>
+    
+    
+
+{% endblock %}
+body {
+  height: 100%;
+  display: block;
+  font-family: 'Bitter', serif;
+  font-size: 14px;
+  background-color: #cce6ff;
+
+}
+use c9;
+
+drop table if exists incident;
+drop table if exists user;
+
+create table user(
+	BNUM		integer primary key,
+	name 	varchar(100),
+	email 		varchar(30),
+	isAdmin 	Boolean,
+	role 		enum ('facstaff', 'student')
+)
+ENGINE = InnoDB;
+
+create table incident(
+	reportID 		        integer auto_increment primary key,
+	reporterID 		        integer,
+	reportedID 		        integer,
+	advocateID		        integer,
+	location 		        varchar(30),
+	category		        enum('racism', 'sexism', 'ableism', 'sexual harassment', 'other'),
+	dateOfIncident 		    date,
+	anonymousToAll   	    Boolean,
+	anonymousToReported 	Boolean,
+    description		        varchar(100),
+    foreign key (reporterID) references user(BNUM),
+    foreign key (reportedID) references user(BNUM),
+    Foreign key (advocateID) references user(BNUM)
+)
+ENGINE = InnoDB;
+
+use c9;
+
+delete from user;
+
+insert into user (BNUM, name, email, isAdmin, role) values (00000001, "Student 1", "student1@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000002, "Student 2", "student2@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000003, "Student 3", "student3@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000004, "Student 4", "student4@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000005, "Student 5", "student5@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000000, "Admin", "admin@wellesley.edu", true, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (10000000, "FacStaff 1", "facstaff1@wellesley.edu", false, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (20000000, "FacStaff 2", "facstaff2@wellesley.edu", false, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (30000000, "FacStaff 3", "facstaff 3@wellesley.edu", false, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (40000000, "FacStaff 4", "Facstaff 4@wellesley.edu", false, "facstaff");
+
+delete from incident; 
+insert into incident (reporterID, reportedID, advocateID, location, category, dateOfIncident, anonymousToAll, anonymousToReported, description) 
+    values (00000001, 10000000, 20000000, "sci", "racism", date('2019-04-15'), false, false, "test");
+insert into incident (reporterID, reportedID, advocateID, location, category, dateOfIncident, anonymousToAll, anonymousToReported, description) 
+    values (00000001, 10000000, 20000000, "sci", "racism", date('2019-04-15'), true, true, "test");
+
+
