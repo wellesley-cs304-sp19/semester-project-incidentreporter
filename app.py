@@ -12,9 +12,7 @@ def home():
         uid = None
     conn = incidentReporter.getConn('c9')   
     if uid:
-        print (uid)
         userInfo = incidentReporter.getUserInformation(conn, uid)
-        print(userInfo)
         return render_template('home.html',
                                 userID = uid, 
                                 userInfo = userInfo)
@@ -38,9 +36,7 @@ def incidentDetailPage(id):
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userInfo = incidentReporter.getUserInformation(conn, uid)
-    print(userInfo)
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
-    print(incidentInfo)
     return render_template('incidentDetailPage.html', userInfo=userInfo, userID=uid, incident=incidentInfo)
     
 @app.route('/deleteIncident/<id>')
@@ -80,7 +76,6 @@ def studentInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
-    print(incidentsList)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
     
@@ -90,8 +85,6 @@ def facstaffInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
-    print(incidentsList)
-    userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
 
 @app.route('/advocateInbox/')
@@ -99,7 +92,6 @@ def advocateInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
-    print(incidentsList)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
 
@@ -109,7 +101,6 @@ def adminInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllIncidents(conn)
-    print(incidentsList)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
 
