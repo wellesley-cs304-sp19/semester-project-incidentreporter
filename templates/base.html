@@ -21,6 +21,7 @@
     <a href = "{{url_for('incidentReport')}}"> Report an Incident</a> ~
     {% else %}
     <a href = "{{url_for('facstaffInbox')}}">Incidents Reported Against You</a> ~ 
+    <a href = "{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a> ~ 
     {% endif %}
     
     {% if userInfo.isAdmin %}

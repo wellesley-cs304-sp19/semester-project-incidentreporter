@@ -86,6 +86,15 @@ def facstaffInbox():
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
 
+@app.route('/advocateInbox/')
+def advocateInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
+    print(incidentsList)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+
     
 @app.route('/adminInbox/')
 def adminInbox():

@@ -20,6 +20,8 @@
                     <th>Reported</th> <!-- Will be ID, maybe we can do an inner join to get the name of this person later on -->
                     {% endif %}
                     
+                    <th>Advocate</th>
+                    
                     {% if userInfo.role == "student"%}
                     <!-- Only for student -->
                     <th>Description</th> 
@@ -39,7 +41,7 @@
                             {% if incident.anonymousToReported %}
                             <td>Anonymous</td>
                             {% else %}
-                            <td>{{incident.name}}</td> 
+                            <td>{{incident.reporterName}}</td> 
                             {% endif %}
                         {% endif %}
                         
@@ -47,18 +49,21 @@
                             {% if incident.anonymousToAll %}
                             <td>Anonymous</td>
                             {% else %}
-                            <td>{{incident.name}}</td> 
+                            <td>{{incident.reporterName}}</td> 
                             {% endif %}
                         {% endif %}
                         
                         <!-- Reported name (for student or admin) -->
                         {% if userInfo.role == "student" %}
-                        <td>{{incident.name}}</td> 
+                        <td>{{incident.reportedName}}</td> 
                         {% endif %} 
                         
                         {% if userInfo.isAdmin %}
-                        <td>{{incident["reported.name"]}}</td> 
+                        <td>{{incident.reportedName}}</td> 
                         {% endif %}
+                        
+                        <!--AdvocateName-->
+                        <td>{{incident.advocateName}}</td>
                     
                         <!-- Description -->
                         {% if userInfo.role == "student"%}
