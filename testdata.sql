@@ -1,3 +1,11 @@
+/*
+testdata.sql
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+*/
+
+
 use c9;
 
 delete from user;

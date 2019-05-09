@@ -1,9 +1,21 @@
+'''
+app.py
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+This file contains the flask application.
+'''
+
 from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify)
 import  incidentReporter, sys, json
 
 app = Flask(__name__)
 app.secret_key = 'secretkey123'
 
+
+'''
+Home route
+'''
 @app.route('/')
 def home():
     try:
@@ -31,6 +43,12 @@ def setUID():
         
         return render_template('home.html', userID=uid, userInfo=userInfo)
 
+
+@app.route('/logout/')
+def logout():
+    session.pop('UID', None)
+    return redirect(url_for('home'))
+        
 @app.route('/incidentDetailPage/<id>')
 def incidentDetailPage(id):
     conn = incidentReporter.getConn('c9')   
@@ -85,6 +103,7 @@ def facstaffInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
 
 @app.route('/advocateInbox/')

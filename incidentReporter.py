@@ -53,8 +53,8 @@ def getAllReportedFacstaff(conn, BNUM):
                             dateOfIncident as dateOfIncident,
                             reporterTab.name as reporterName,
                             advocateTab.name as advocateName,
-                            reportedTab.name as reportedName
-                            
+                            reportedTab.name as reportedName,
+                            description as description
                             from incident 
                         inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
                         inner join user advocateTab on incident.advocateID=advocateTab.BNUM 

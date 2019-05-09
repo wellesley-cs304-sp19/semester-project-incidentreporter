@@ -22,10 +22,8 @@
                     
                     <th>Advocate</th>
                     
-                    {% if userInfo.role == "student"%}
-                    <!-- Only for student -->
                     <th>Description</th> 
-                    {% endif %}
+                   
                     
                     <th>Details</th>
                     
@@ -65,10 +63,8 @@
                         <!--AdvocateName-->
                         <td>{{incident.advocateName}}</td>
                     
-                        <!-- Description -->
-                        {% if userInfo.role == "student"%}
                         <td>{{incident.description}}</td> 
-                        {% endif %}
+                        
                         
                         <td>
                             <form action="{{ url_for('incidentDetailPage', id=incident.reportID) }}">

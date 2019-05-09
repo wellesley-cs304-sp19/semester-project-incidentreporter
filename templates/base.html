@@ -11,7 +11,6 @@
 <body>
     
     <a href = "{{url_for('home')}}">Home</a> ~ 
-    
     {% if userInfo == None %}
     <p>Please log in.</p>
     
@@ -27,8 +26,12 @@
     {% if userInfo.isAdmin %}
     <a href = "{{url_for('adminInbox')}}">All Incidents</a> ~ 
     {% endif %}
+     <form action="{{ url_for('logout') }}">
+            <input type="submit" value="Log Out">
+        </form>
     {% endif %}
 <p>
+    
 {% with messages = get_flashed_messages() %}
    {% if messages %}
       {% for message in messages %}
@@ -43,16 +46,16 @@
     <h1>
         {% if userID %}
         You are logged in as user number {{ userID }}
-        {% endif %}
+        
     </h1>
-    
+        {% else %}
             <form method="POST" id="form" action="/setUID/">
                 <label for="user_id">User ID:</label>
                     <input type="text" name="user_id" id='user_id'><br>
             </form>
             
             <button id='loginbutton' type="submit" form="form" value="Submit">Submit</button>
-            
+        {% endif %}
 </p>
 
 <div class="form-body">
