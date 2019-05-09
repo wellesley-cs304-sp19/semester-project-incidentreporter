@@ -40,6 +40,11 @@ def insertIncident(conn, form, uid, rID, aID):
     curs.execute(add, values)
     conn.commit()
     
+def deleteIncident(conn, id):
+    print(id)
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''delete from incident where reportID = %s''', [id])
+    conn.commit()
         
 # Gets all incidents reported about a specific facstaff user by their BNUM, and also the name of the students who reported
 def getAllReportedFacstaff(conn, BNUM):

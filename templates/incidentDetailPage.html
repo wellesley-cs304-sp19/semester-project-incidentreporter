@@ -35,6 +35,9 @@
         dateOfIncident: {{incident.dateOfIncident}} <br>
         description: {{incident.description}}
         
+        <form action="{{ url_for('deleteIncident', id=incident.reportID) }}">
+            <input type="submit" value="Delete Incident">
+        </form>
     </body>
 {% endblock %}
 </html>

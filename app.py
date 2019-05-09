@@ -43,6 +43,14 @@ def incidentDetailPage(id):
     print(incidentInfo)
     return render_template('incidentDetailPage.html', userInfo=userInfo, userID=uid, incident=incidentInfo)
     
+@app.route('/deleteIncident/<id>')
+def deleteIncident(id):
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    incidentReporter.deleteIncident(conn, id)
+    return render_template('home.html', userInfo=userInfo, userID=uid)
+    
 # This function 
 @app.route('/incidentReport', methods=['POST', 'GET'])
 def incidentReport():
