@@ -88,8 +88,8 @@ def incidentDetailPage(id):
     return render_template('incidentDetailPage.html', userInfo=userInfo, userID=uid, incident=incidentInfo)
     
 '''
-deleteIncident(id) deletes incident 
-- 
+deleteIncident(id) deletes incident report
+- Only original reporter can delete an incident report
 '''        
 @app.route('/deleteIncident/<id>')
 def deleteIncident(id):
@@ -164,7 +164,7 @@ def advocateInbox():
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
 
 '''
-adminInbox() displays all reported incidents
+adminInbox() displays all reported incidents (for admin)
 '''     
 @app.route('/adminInbox/')
 def adminInbox():
