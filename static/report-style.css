@@ -5,6 +5,13 @@ body {
   font: normal 14px Roboto,arial,sans-serif;
 }
 
+.app-info {
+    font-size: 12px;
+}
+
+#about {
+    font-style: italic;
+}
 .container {
     padding: 25px;
     position: fixed;
@@ -31,4 +38,8 @@ h4 {
 
 .form-control {
     border-radius: 10px;
+}
+
+footer {
+    font-size: 12px;
 }
