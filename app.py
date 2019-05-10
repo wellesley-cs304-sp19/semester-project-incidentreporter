@@ -110,7 +110,10 @@ def incidentReport():
     uid = session['UID']
     if request.method == 'GET':
         userInfo = incidentReporter.getUserInformation(conn, uid)
-        return render_template('incidentReport.html', userID = uid, 
+        facStaff = incidentReporter.getFacStaff(conn)
+        return render_template('incidentReport.html', 
+                                userID = uid, 
+                                facStaff = facStaff,
                                 userInfo = userInfo)
     else:
         rName = request.form['rname']

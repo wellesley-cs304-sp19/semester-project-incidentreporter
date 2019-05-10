@@ -45,8 +45,19 @@
     <span class='incident-info'>
     <p> Incident Information </p>
     
+    <!--- 
     <label for="rname"> Who are you reporting?
         <input id="rname" type="text" name="rname" size="30" autofocus>
+    </label> <br>
+    !--->
+    
+    <label for="reported"> Who are you reporting?
+    <select name="faculty">
+            <option value="">
+    {% for fac in facStaff %}
+            <option value= "{{fac.name}}">{{fac.name}}</option>"
+    {% endfor %}
+            </select>
     </label> <br>
     
     <label for="location"> Location of Incident:

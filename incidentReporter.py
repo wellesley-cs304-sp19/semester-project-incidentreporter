@@ -28,6 +28,16 @@ def getIDFromName(conn, name):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select BNUM from user where name=%s''', [name])
     return curs.fetchall()
+
+# This function gets all faculty/staff in the database 
+# The purpose of this function is to populate the html drop down menu 
+# in the incident report.
+# *** unsure if this is necessary as an entire function, maybe the 
+# query should just be in the html template, will investigate *** - KG
+def getFacStaff(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select name from user where role="facstaff"''')
+    return curs.fetchall()
     
 def insertIncident(conn, form, uid, rID, aID):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
