@@ -4,6 +4,7 @@ CS304 SP19 Final Project
 Julia Klugherz, Karina Lin, Katherine Gao
 
 This file contains the flask application in which our project runs.
+To run the project, type in 'python app.py' in the terminal.
 '''
 
 from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify)
@@ -43,6 +44,8 @@ setUID() is a login route that
 @app.route('/setUID/', methods=['POST'])
 def setUID():
     if request.method == 'POST':
+        print(request.form)
+        
         uid = request.form.get('user_id')
         # User attempts to log in without any credentials
         if uid == '': 

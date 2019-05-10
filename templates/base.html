@@ -18,25 +18,31 @@
     <!--Pulling Awesome Font -->
 <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
 
+        {% if userID %}
+You are logged in as user number {{ userID }}
+    {% else %}    
 <div class="container">
     <div class="row">
         <div class="col-md-offset-5 col-md-3">
+        <form method="POST" id="form" action="/setUID/">
             <div class="form-login">
             <h4>Please Log In</h4>
-            <input type="text" id="userName" class="form-control input-sm chat-input" placeholder="username" />
+            <input type="text" id="email" name="email" class="form-control input-sm chat-input" placeholder="Email" />
             </br>
-            <input type="text" id="userPassword" class="form-control input-sm chat-input" placeholder="password" />
+            <input type="text" name="user_id" id="user_id" class="form-control input-sm chat-input" placeholder="B-number" />
             </br>
             <div class="wrapper">
-            <span class="group-btn">     
-                <a href="#" class="btn btn-primary btn-md">secure login <i class="fa fa-sign-in"></i></a>
+                </form>
+            <span class="group-btn">  
+                <button id='loginbutton' type="submit" form="form" value="Submit" class="btn btn-primary btn-md">Submit<i class="fa fa-sign-in"></i></button>
             </span>
             </div>
             </div>
-        
         </div>
     </div>
 </div>
+ {% endif %}
+
     {% else%}
     {% if userInfo.role == "student" %}
      ~ <a href = "{{url_for('studentInbox')}}">Incidents You've Reported</a>
@@ -66,23 +72,7 @@
 </p>
 
 
-<p>
-    <h1>
-        {% if userID %}
-        You are logged in as user number {{ userID }}
-        
-    </h1>
-        {% else %}
-            <form method="POST" id="form" action="/setUID/">
-                <label for="user_id">Email: </label>
-                    <input type="text" name="email" id='email'><br>
-                <label for="user_id">B-number: </label>
-                    <input type="text" name="user_id" id='user_id'><br>
-            </form>
-            
-            <button id='loginbutton' type="submit" form="form" value="Submit">Submit</button>
-        {% endif %}
-</p>
+
 
 <div class="form-body">
 {% block content %}
