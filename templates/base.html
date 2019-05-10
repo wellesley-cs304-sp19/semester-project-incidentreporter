@@ -14,22 +14,52 @@
 </head>
 <body>
     
-    <a href = "{{url_for('home')}}">Home</a> ~ 
+    <a href = "{{url_for('home')}}">Home</a>  
     {% if userInfo == None %}
+
+    <!--Pulling Awesome Font -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+        {% if userID %}
+You are logged in as user number {{ userID }}
+    {% else %}    
+<div class="container">
+    <div class="row">
+        <div class="col-md-offset-5 col-md-3">
+        <form method="POST" id="form" action="/setUID/">
+            <div class="form-login">
+            <h4>Please Log In</h4>
+            <input type="text" id="email" name="email" class="form-control input-sm chat-input" placeholder="Email" />
+            </br>
+            <input type="text" name="user_id" id="user_id" class="form-control input-sm chat-input" placeholder="B-number" />
+            </br>
+            <div class="wrapper">
+                </form>
+            <span class="group-btn">  
+                <button id='loginbutton' type="submit" form="form" value="Submit" class="btn btn-primary btn-md">Submit<i class="fa fa-sign-in"></i></button>
+            </span>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+ {% endif %}
+
+
     <p>Please log in.</p>
     
     {% else%}
     {% if userInfo.role == "student" %}
-    <a href = "{{url_for('studentInbox')}}">Incidents You've Reported</a> ~ 
-    <a href = "{{url_for('incidentReport')}}"> Report an Incident</a> ~
+     ~ <a href = "{{url_for('studentInbox')}}">Incidents You've Reported</a>
+     ~ <a href = "{{url_for('incidentReport')}}"> Report an Incident</a>
     {% else %}
-    <a href = "{{url_for('facstaffInbox')}}">Incidents Reported Against You</a> ~ 
-    <a href = "{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a> ~ 
+     ~ <a href = "{{url_for('facstaffInbox')}}">Incidents Reported Against You</a>
+     ~ <a href = "{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a> 
     {% endif %}
     
     {% if userInfo.isAdmin %}
     <a href = "{{url_for('adminInbox')}}">All Incidents</a> ~ 
     {% endif %}
+     
      <form action="{{ url_for('logout') }}">
             <input type="submit" value="Log Out">
         </form>
@@ -45,19 +75,6 @@
 {% endwith %}
 </p>
 
-
-<p>
-    <h1>
-        {% if userID %}
-        You are logged in as user number {{ userID }}
-        
-    </h1>
-        {% else %}
-            <form method="POST" id="form" action="/setUID/">
-                <label for="user_id">User ID:</label>
-                    <input type="text" name="user_id" id='user_id'><br>
-            </form>
-            
 
 <!--- prettier login>
 <div class="container">
@@ -80,9 +97,6 @@
     </div>
 </div>
 <!--->
-            
-            <button id='loginbutton' type="submit" form="form" value="Submit">Submit</button>
-        {% endif %}
 </p>
 
 <div class="form-body">
