@@ -4,6 +4,9 @@
 <head>
     <meta charset='utf-8'>
     <meta name=author content="Karina Lin, Julia Klugherz, Katherine Gao">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <title>{{title}}</title>
     
     {% block headstuff %}{% endblock %}
@@ -12,8 +15,28 @@
     
     <a href = "{{url_for('home')}}">Home</a> ~ 
     {% if userInfo == None %}
-    <p>Please log in.</p>
-    
+    <!--Pulling Awesome Font -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-offset-5 col-md-3">
+            <div class="form-login">
+            <h4>Please Log In</h4>
+            <input type="text" id="userName" class="form-control input-sm chat-input" placeholder="username" />
+            </br>
+            <input type="text" id="userPassword" class="form-control input-sm chat-input" placeholder="password" />
+            </br>
+            <div class="wrapper">
+            <span class="group-btn">     
+                <a href="#" class="btn btn-primary btn-md">secure login <i class="fa fa-sign-in"></i></a>
+            </span>
+            </div>
+            </div>
+        
+        </div>
+    </div>
+</div>
     {% else%}
     {% if userInfo.role == "student" %}
     <a href = "{{url_for('studentInbox')}}">Incidents You've Reported</a> ~ 
