@@ -8,7 +8,7 @@ To run the project, type in 'python app.py' in the terminal.
 '''
 
 from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify)
-import  incidentReporter, sys, json
+import sys, json, incidentReporter
 
 app = Flask(__name__)
 app.secret_key = 'secretkey123'
@@ -59,12 +59,14 @@ def setUID():
             return redirect(url_for('home'))
             
         # Try to log in with email and B-number
-        # Do that here
-            
-        session['UID'] = uid
         conn = incidentReporter.getConn('c9')   
-        userInfo = incidentReporter.getUserInformation(conn, uid)
-        return render_template('home.html', userID=uid, userInfo=userInfo)
+        userInfo = incidentReporter.getUserInformationWithEmail(conn, uid, email)
+        if userInfo == None: 
+            flash('Error: Invalid credentials.')
+            return redirect(url_for('home')) 
+        else: 
+            session['UID'] = uid
+            return render_template('home.html', userID=uid, userInfo=userInfo)
 
 '''
 logout() route 
