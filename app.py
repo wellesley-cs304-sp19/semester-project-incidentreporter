@@ -101,6 +101,7 @@ def deleteIncident(id):
     incidentReporter.deleteIncident(conn, id)
     return render_template('home.html', userInfo=userInfo, userID=uid)
     
+
 '''
 incidentReport() houses the main incident report form for students
 - On GET, displays form

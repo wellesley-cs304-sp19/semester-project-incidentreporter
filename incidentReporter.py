@@ -150,13 +150,21 @@ def getAllIncidents(conn):
     return curs.fetchall()
 
 '''
-getIncidentInfo(conn, id) gets one incident based on reportID
+This function gets one incident based on reportID
 '''
 def getIncidentInfo(conn, id):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select * from incident where reportID = %s''', [id])
     return curs.fetchone()
-        
+
+'''
+This function deletes one incident based on reportID
+'''
+def deleteIncident(conn, id):
+    print(id)
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''delete from incident where reportID = %s''', [id])
+    conn.commit()
 
 if __name__ == '__main__':
     conn = getConn('c9')
