@@ -52,7 +52,10 @@ def getIDFromName(conn, name):
     curs.execute('''select BNUM from user where name=%s''', [name])
     return curs.fetchall()
     
-    
+def getFacStaff(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select name from user where role = "facstaff"''')
+    return curs.fetchall()
 '''
 insertIncident(conn, form, uid, rID, aID) creates an incident report and 
 adds it to the database

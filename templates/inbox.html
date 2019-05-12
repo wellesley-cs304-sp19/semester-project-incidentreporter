@@ -7,51 +7,51 @@
 
 {% block content %}
 <body>
-            <table id="incident-list"  >
-                <tr>
-                    <th>Report ID</th>
-                    <th>Incident Date</th>
-                    
-                    {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
+    <table class="table table-hover" id="incident-list">
+  <thead>
+    <tr>
+      <th scope="col">Report ID</th>
+      <th scope="col">Incident Date</th>
+      
+      {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
                     <!-- Only for admin and facstaff --> 
                     <th>Reporter</th> <!-- Anonymize if necessary -->
                     {% endif %}
-                    
-                    {% if userInfo.role == "student" or userInfo.isAdmin %}
+       
+       {% if userInfo.role == "student" or userInfo.isAdmin %}
                     <!-- Only for student and admin -->
                     <th>Reported</th> <!-- Will be ID, maybe we can do an inner join to get the name of this person later on -->
                     {% endif %}
                     
-                    <th>Advocate</th>
+      <th scope="col">Advocate</th>
+      <th scope="col">Description</th>
+      <th scope="col">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+  
+    {% for incident in incidentsList %}
                     
-                    <th>Description</th> 
-                   
-                    
-                    <th>Details</th>
-                    
-                </tr>
-                {% for incident in incidentsList %}
-                    
-                    <tr>
-                        <td>{{incident.reportID}}</td>
-                        <td>{{incident.dateOfIncident}}</td>
+        <tr>
+            <td>{{incident.reportID}}</td>
+            <td>{{incident.dateOfIncident}}</td>
                         
-                        <!-- Reporter name (for facstaff and admin) -->
-                        {% if userInfo.role == "facstaff" and not userInfo.isAdmin %}
-                            {% if incident.anonymousToReported %}
-                            <td>Anonymous</td>
-                            {% else %}
-                            <td>{{incident.reporterName}}</td> 
-                            {% endif %}
-                        {% endif %}
+    <!-- Reporter name (for facstaff and admin) -->
+        {% if userInfo.role == "facstaff" and not userInfo.isAdmin %}
+            {% if incident.anonymousToReported %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.reporterName}}</td> 
+            {% endif %}
+        {% endif %}
                         
-                        {% if userInfo.isAdmin %}
-                            {% if incident.anonymousToAll %}
-                            <td>Anonymous</td>
-                            {% else %}
-                            <td>{{incident.reporterName}}</td> 
-                            {% endif %}
-                        {% endif %}
+        {% if userInfo.isAdmin %}
+            {% if incident.anonymousToAll %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.reporterName}}</td> 
+            {% endif %}
+        {% endif %}
                         
                         <!-- Reported name (for student or admin) -->
                         {% if userInfo.role == "student" %}
@@ -75,6 +75,7 @@
                         </td>
                     </tr>
                 {% endfor %}
+                </tbody>
             </table>
          
     </body>

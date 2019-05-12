@@ -10,11 +10,13 @@
 
 <form action="/incidentReport" method="post">
     
+    <div class="form-group">
     <span class='reporter-info'>
         <p>Reporter Information</p>
     <label for="sname"> Reporter Name:
         <input id="sname" type="text" name="sname" size="30" placeholder="Wendy Wellesley" autofocus>
     </label> <br>
+    </div>
     
     <!--- In the alpha version, we should add in form validation and have the 
           information for possible people who are being reported pull from
@@ -38,10 +40,11 @@
        <span class="radio-body">No</span>
     </label> <br>
     
+    <div class="form-group">
     <label for="advocate"> Advocate Name:
         <input id="advocate" type="text" name="advocate" size="30" placeholder="Trusted Friend" autofocus>
     </label>
-    
+    </div>
     </span>
     
     <span class='incident-info'>
