@@ -78,7 +78,33 @@ facstaff user by their BNUM, and also the name of the student who reported
 '''
 def getAllReportedFacstaff(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select * from incident inner join user where reporterID=BNUM and reportedID=%s''', [BNUM])
+    curs.execute('''select reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        where reportedID=%s''', [BNUM])
+    return curs.fetchall()
+    
+# Gets all incidents reported for which a facstaff is an advocate by their BNUM, and also the name of the students who reported
+def getAllReportedAdvocate(conn, BNUM):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select reportID as reportID,
+                                dateOfIncident as dateOfIncident,
+                                reporterTab.name as reporterName,
+                                advocateTab.name as advocateName,
+                                reportedTab.name as reportedName
+                                
+                                from incident 
+                            inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                            inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                            inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                            where advocateID=%s''', [BNUM])    
     return curs.fetchall()
 
 '''
@@ -89,7 +115,18 @@ in the report
 '''
 def getAllReportedStudent(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select * from incident inner join user where reportedID=BNUM and reporterID=%s''', [BNUM])
+    curs.execute('''select reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName,
+                            incident.description as description
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        where reporterID=%s''', [BNUM])
     return curs.fetchall()
     
     
@@ -99,8 +136,17 @@ the reporter just shows up as "name", I think I need an 'as',
 Also might need another inner join for advocate*** '''
 def getAllIncidents(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select * from incident inner join user as reporter inner join 
-                    user as reported where reporterID=reporter.BNUM and reportedID=reported.BNUM''')
+    curs.execute('''select reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        ''')
     return curs.fetchall()
 
 '''

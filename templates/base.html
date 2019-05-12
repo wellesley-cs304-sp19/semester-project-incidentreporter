@@ -57,9 +57,9 @@ You are logged in as user number {{ userID }}
     <a href = "{{url_for('adminInbox')}}">All Incidents</a> ~ 
     {% endif %}
      
-     <form action="{{ url_for('logout') }}">
+    <form class="log-out" action="{{ url_for('logout') }}">
             <input type="submit" value="Log Out">
-        </form>
+    </form>
     {% endif %}
 <p>
     

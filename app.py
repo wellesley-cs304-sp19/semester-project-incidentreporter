@@ -153,6 +153,7 @@ def facstaffInbox():
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+
 '''
 advocateInbox() displays all incidents reports in which 
 the facstaff named an advocate
@@ -162,9 +163,10 @@ def advocateInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
+    # print(incidentsList)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
-
+    
 '''
 adminInbox() displays all reported incidents (for admin)
 '''     
