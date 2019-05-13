@@ -7,6 +7,7 @@
 
 {% block content %}
     <body>
+        <div id="detail-box" class="row justify-content-center">
         Incident ID: {{incident.reportID}} <br>
         {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
             <!-- Only for admin and facstaff --> 
@@ -32,14 +33,20 @@
         
         Reported: {{incident.reportedID}} <br>
         Advocate: {{incident.advocateID}} <br>
-        location: {{incident.location}} <br>
-        category: {{incident.category}} <br>
-        dateOfIncident: {{incident.dateOfIncident}} <br>
-        description: {{incident.description}}
+        Location: {{incident.location}} <br>
+        Category: {{incident.category}} <br>
+        Date of Incident: {{incident.dateOfIncident}} <br>
+        Description: {{incident.description}} 
         
+        </div>
+        
+        <div id="delete" class="row justify-content-center">
+        <div class="form-group">
         <form action="{{ url_for('deleteIncident', id=incident.reportID) }}">
-            <input type="submit" value="Delete Incident">
+            <input class="btn btn-danger" type="submit" value="Delete Incident">
         </form>
+        </div>
+        </div>
     </body>
 {% endblock %}
 </html>

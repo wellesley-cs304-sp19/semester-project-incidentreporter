@@ -13,6 +13,10 @@ body {
     padding-right: 150px;
 }
 
+.user-info {
+    font-style: italic;
+}
+
 #home-title, #tag-line {
     text-align: center;
 }
@@ -57,7 +61,23 @@ h4 {
     text-align: center;
 }
 
+#detail-box {
+    padding-left: 50px;
+    padding-right: 50px;
+    border-radius: 10px;
+    text-align: center;
+    border-style: solid;
+    background-color: rgba(156,231,250,.5);
+    padding-bottom: 10px;
+    padding-top: 10px;
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
 
+#delete {
+    padding-top: 10px;
+}
 footer {
     font-size: 12px;
 }

@@ -32,7 +32,7 @@
                 </form>
                 <span class="group-btn">  
                 <button id='loginbutton' type="submit" form="form" value="Submit" class="btn btn-primary btn-md">Submit<i class="fa fa-sign-in"></i></button>
-            </span>
+                </span>
                 </div>
                 </div>
             </div>
@@ -59,11 +59,11 @@
         <br>
         
         {% if userID %} 
-            You are logged in as user number {{ userID }}
+            <div class="user-info">You are logged in as user number {{ userID }} </div>
         {% endif %}
 
-    <form class="log-out" action="{{ url_for('logout') }}">
-        <input type="submit" value="Log Out">
+    <form id="log-out" action="{{ url_for('logout') }}">
+        <input class="btn btn-outline-dark" type="submit" value="Log Out">
     </form>
     {% endif %}
     <p>
@@ -88,7 +88,7 @@
     <footer>
         {% block footer %}
         <br>
-        <br> Created as a final project for CS304 {% endblock %}
+        <br> Created by Karina Lin, Katherine Gao, and Julia Klugherz as a final project for CS304 {% endblock %}
     </footer>
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

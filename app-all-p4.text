@@ -1,0 +1,854 @@
+'''
+app.py
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+This file contains the flask application in which our project runs.
+To run the project, type in 'python app.py' in the terminal.
+'''
+
+from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify)
+import sys, json, incidentReporter
+
+app = Flask(__name__)
+app.secret_key = 'secretkey123'
+
+
+'''
+home() route renders home page and login box, if necessary
+'''
+@app.route('/')
+def home():
+    uid=session.get('UID')
+    if uid:
+        conn = incidentReporter.getConn('c9')
+        userInfo = incidentReporter.getUserInformation(conn, uid)
+        return render_template('home.html',
+                                userID = uid, 
+                                userInfo = userInfo)
+    else:
+        userInfo = None
+        return render_template('home.html', userID=uid, userInfo=userInfo)
+       
+'''
+setUID() is a login route that
+- Checks to make sure that credentials are submitted (not blank)
+- Checks that provided email is a wellesley email
+- Checks that B-number and email match one user
+- Then sets user session and re-renders home page 
+'''       
+@app.route('/setUID/', methods=['POST'])
+def setUID():
+    if request.method == 'POST':
+        print(request.form)
+        
+        uid = request.form.get('user_id')
+        # User attempts to log in without any credentials
+        if uid == '': 
+            return redirect(url_for('home'))
+            
+        email = request.form.get('email')
+        email_site = email.split("@")[1]
+        # User attempts to log in with non-Wellesley email
+        if email_site != 'wellesley.edu':
+            flash('Error: please use Wellesley email credentials.')
+            return redirect(url_for('home'))
+            
+        # Try to log in with email and B-number
+        conn = incidentReporter.getConn('c9')   
+        userInfo = incidentReporter.getUserInformationWithEmail(conn, uid, email)
+        if userInfo == None: 
+            flash('Error: Invalid credentials.')
+            return redirect(url_for('home')) 
+        else: 
+            session['UID'] = uid
+            return render_template('home.html', userID=uid, userInfo=userInfo)
+
+'''
+logout() route 
+- Pops uid from session
+- Redirects to home page
+'''       
+@app.route('/logout/')
+def logout():
+    session.pop('UID', None)
+    return redirect(url_for('home'))
+        
+'''
+incidentDetailPage(id) shows one incident in detail based on incident ID
+'''            
+@app.route('/incidentDetailPage/<id>')
+def incidentDetailPage(id):
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    incidentInfo = incidentReporter.getIncidentInfo(conn, id)
+    return render_template('incidentDetailPage.html', userInfo=userInfo, userID=uid, incident=incidentInfo)
+    
+'''
+deleteIncident(id) deletes incident report
+- Only original reporter can delete an incident report
+'''        
+@app.route('/deleteIncident/<id>')
+def deleteIncident(id):
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    incidentReporter.deleteIncident(conn, id)
+    return render_template('home.html', userInfo=userInfo, userID=uid)
+    
+
+'''
+incidentReport() houses the main incident report form for students
+- On GET, displays form
+- On POST, submits incident report
+'''    
+@app.route('/incidentReport', methods=['POST', 'GET'])
+def incidentReport():
+    conn = incidentReporter.getConn('c9')
+    uid = session['UID']
+    if request.method == 'GET':
+        userInfo = incidentReporter.getUserInformation(conn, uid)
+        facStaff = incidentReporter.getFacStaff(conn)
+        return render_template('incidentReport.html', 
+                                userID = uid, 
+                                facStaff = facStaff,
+                                userInfo = userInfo)
+    else:
+        rID = request.form['faculty']
+        aID = request.form['advocate']
+        
+        # a person cannot report themselves
+        if uid == rID:
+            flash('Error: you cannot report yourself')
+            return redirect(request.referrer)
+        # update database with information from a valid report
+        info = request.form
+        incidentReporter.insertIncident(conn, info, uid, rID, aID)
+        return redirect(url_for('studentInbox'))
+
+'''
+studentInbox() displays all incidents reported by student
+'''    
+@app.route('/studentInbox/')
+def studentInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+    
+'''
+facstaffInbox() displays all incidents reports in which the facstaff is reported 
+'''     
+@app.route('/facstaffInbox/')
+def facstaffInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
+    print(incidentsList)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+
+'''
+advocateInbox() displays all incidents reports in which 
+the facstaff named an advocate
+'''     
+@app.route('/advocateInbox/')
+def advocateInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
+    # print(incidentsList)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+    
+'''
+adminInbox() displays all reported incidents (for admin)
+'''     
+@app.route('/adminInbox/')
+def adminInbox():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentsList = incidentReporter.getAllIncidents(conn)
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+
+if __name__ == '__main__':
+    app.debug = True
+    app.run('0.0.0.0',8081)
+'''
+incidentReporter.py
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+This file contains the SQL queries to our database.
+'''
+
+import sys
+import MySQLdb
+
+ADDED_BY = 1341
+    
+def getConn(db):
+    conn = MySQLdb.connect(host='localhost',
+                           user='ubuntu',
+                           passwd='',
+                           db=db)
+    return conn
+    
+'''
+getUserInformation(conn, userID) will get all of the information of the logged 
+in user as it is in the database, using the BNUM (userID)
+'''
+def getUserInformation(conn, userID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    try:
+        curs.execute('''select * from user where BNUM = %s''', [userID])
+        return curs.fetchone()
+    except:
+        return None
+
+'''
+getUserInformationWithEmail(conn, userID) will get all of the information of the logged 
+in user as it is in the database, using the BNUM (userID) AND email
+'''       
+def getUserInformationWithEmail(conn, userID, email):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    try:
+        curs.execute('''select * from user where BNUM = %s and email = %s''', [userID, email])
+        return curs.fetchone()
+    except:
+        return None        
+
+''' Gets the UID of the person who is being reported based on the given name 
+    ***will not need this in the alpha version ideally because we will change 
+    the incident reporting form so that this form element will be a drop down
+    # menu with options of factulry rather than a free for all text box***
+'''
+def getIDFromName(conn, name): 
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select BNUM from user where name=%s''', [name])
+    return curs.fetchall()
+    
+def getFacStaff(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select name, BNUM from user where role = "facstaff"''')
+    return curs.fetchall()
+'''
+insertIncident(conn, form, uid, rID, aID) creates an incident report and 
+adds it to the database
+'''    
+def insertIncident(conn, form, uid, rID, aID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    add = ("insert into incident " 
+           "(reporterID,reportedID,advocateID,location,category,dateOfIncident,anonymousToAll,anonymousToReported,description)"
+           "values(%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+    values = (uid,rID,aID,
+              form['location'],form['category'],form['date'],
+              form['anon-all'],form['anon-r'],form['description'])
+    curs.execute(add, values)
+    conn.commit()
+    
+        
+'''
+getAllReportedFacstaff(conn, BNUM) Gets all incidents reported about a specific 
+facstaff user by their BNUM, and also the name of the student who reported
+'''
+def getAllReportedFacstaff(conn, BNUM):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
+                            description as description,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        where reportedID=%s''', [BNUM])
+    return curs.fetchall()
+    
+# Gets all incidents reported for which a facstaff is an advocate by their BNUM, and also the name of the students who reported
+def getAllReportedAdvocate(conn, BNUM):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select reportID as reportID,
+                                dateOfIncident as dateOfIncident,
+                                anonymousToReported as anonymousToReported,
+                                anonymousToAll as anonymousToAll,
+                                reporterTab.name as reporterName,
+                                advocateTab.name as advocateName,
+                                reportedTab.name as reportedName,
+                                incident.description as description
+                                
+                                from incident 
+                            inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                            inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                            inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                            where advocateID=%s''', [BNUM])    
+    return curs.fetchall()
+
+'''
+getAllReportedStudent(conn, BNUM) gets all incidents reported by a specific 
+student using their BNUM, and also the names of facstaff who were implicated
+in the report
+***Do we need another inner join to get the advocate's name?***
+'''
+def getAllReportedStudent(conn, BNUM):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName,
+                            incident.description as description
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        where reporterID=%s''', [BNUM])
+    return curs.fetchall()
+    
+    
+''' getAllIncidents(conn) gets all reported incidents (for admin view)
+***For some reason I'm getting reported.name... etc but not reporter.name,
+the reporter just shows up as "name", I think I need an 'as', 
+Also might need another inner join for advocate*** '''
+def getAllIncidents(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName,
+                            incident.description as description
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        ''')
+    return curs.fetchall()
+
+'''
+This function gets one incident based on reportID
+'''
+def getIncidentInfo(conn, id):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select * from incident where reportID = %s''', [id])
+    return curs.fetchone()
+
+'''
+This function deletes one incident based on reportID
+'''
+def deleteIncident(conn, id):
+    print(id)
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''delete from incident where reportID = %s''', [id])
+    conn.commit()
+
+if __name__ == '__main__':
+    conn = getConn('c9')
+    # print(getAllReportedFacstaff(conn, 10000000))
+    # print(getAllReportedStudent(conn, 1))
+    print(getAllIncidents(conn))
+/*
+tables.sql
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+*/
+
+use c9;
+
+drop table if exists incident;
+drop table if exists user;
+
+create table user(
+	BNUM		integer primary key,
+	name 	varchar(100),
+	email 		varchar(30),
+	isAdmin 	Boolean,
+	role 		enum ('facstaff', 'student')
+)
+ENGINE = InnoDB;
+
+create table incident(
+	reportID 		        integer auto_increment primary key,
+	reporterID 		        integer,
+	reportedID 		        integer,
+	advocateID		        integer,
+	location 		        varchar(30),
+	category		        enum('racism', 'sexism', 'ableism', 'sexual harassment', 'other'),
+	dateOfIncident 		    date,
+	anonymousToAll   	    Boolean,
+	anonymousToReported 	Boolean,
+    description		        varchar(100),
+    foreign key (reporterID) references user(BNUM),
+    foreign key (reportedID) references user(BNUM),
+    Foreign key (advocateID) references user(BNUM)
+)
+ENGINE = InnoDB;
+
+/*
+testdata.sql
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+*/
+
+
+use c9;
+
+delete from user;
+
+insert into user (BNUM, name, email, isAdmin, role) values (00000001, "Student 1", "student1@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000002, "Student 2", "student2@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000003, "Student 3", "student3@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000004, "Student 4", "student4@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000005, "Student 5", "student5@wellesley.edu", false, "student");
+insert into user (BNUM, name, email, isAdmin, role) values (00000000, "Admin", "admin@wellesley.edu", true, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (10000000, "FacStaff 1", "facstaff1@wellesley.edu", false, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (20000000, "FacStaff 2", "facstaff2@wellesley.edu", false, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (30000000, "FacStaff 3", "facstaff 3@wellesley.edu", false, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (40000000, "FacStaff 4", "Facstaff 4@wellesley.edu", false, "facstaff");
+
+delete from incident; 
+insert into incident (reporterID, reportedID, advocateID, location, category, dateOfIncident, anonymousToAll, anonymousToReported, description) 
+    values (00000001, 10000000, 20000000, "sci", "racism", date('2019-04-15'), false, false, "test");
+insert into incident (reporterID, reportedID, advocateID, location, category, dateOfIncident, anonymousToAll, anonymousToReported, description) 
+    values (00000001, 10000000, 20000000, "sci", "racism", date('2019-04-15'), true, true, "test");
+
+
+<!doctype html>
+<html lang='en'>
+<link rel='stylesheet' href="{{url_for('static',filename='report-style.css')}}">
+
+<head>
+    <meta charset='utf-8'>
+    <meta name=author content="Karina Lin, Julia Klugherz, Katherine Gao">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <title>{{title}}</title>
+
+    {% block headstuff %}{% endblock %}
+</head>
+
+<body>
+
+    <a href="{{url_for('home')}}">Home</a> 
+    
+    {% if userInfo == None %}
+
+    <div class="login-box">
+        <div class="row justify-content-center">
+            <div class="col-md-offset-5 col-md-3">
+                <form method="POST" id="form" action="/setUID/">
+                    <div class="form-login">
+                        <h4>Please Log In</h4>
+                        <input type="text" id="email" name="email" class="form-control input-sm chat-input" placeholder="Email" />
+                        </br>
+                        <input type="text" name="user_id" id="user_id" class="form-control input-sm chat-input" placeholder="B-number" />
+                        </br>
+                        <div class="wrapper">
+                </form>
+                <span class="group-btn">  
+                <button id='loginbutton' type="submit" form="form" value="Submit" class="btn btn-primary btn-md">Submit<i class="fa fa-sign-in"></i></button>
+            </span>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% else %} 
+        
+    
+        {% if userInfo.role == "student" %} 
+            ~ <a href="{{url_for('studentInbox')}}">Incidents You've Reported</a> 
+            ~ <a href="{{url_for('incidentReport')}}"> Report an Incident</a>  
+        {% endif %}
+    
+        {% if userInfo.role == "facstaff" %}
+            ~ <a href="{{url_for('facstaffInbox')}}">Incidents Reported Against You</a> 
+            ~ <a href="{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a> 
+        {% endif %} 
+        
+        {% if userInfo.isAdmin %}
+            ~ <a href="{{url_for('adminInbox')}}">All Incidents</a> ~ 
+        {% endif %}
+        
+        <br>
+        
+        {% if userID %} 
+            You are logged in as user number {{ userID }}
+        {% endif %}
+
+    <form class="log-out" action="{{ url_for('logout') }}">
+        <input type="submit" value="Log Out">
+    </form>
+    {% endif %}
+    <p>
+
+        {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %}
+    <p>{{ message }}</p>
+        {% endfor %} 
+        {% endif %} 
+        {% endwith %}
+
+
+
+    </p>
+
+    <div class="form-body">
+        {% block content %}
+
+        <h1>{{title}}</h1>
+
+        {% endblock %}
+    </div>
+    <footer>
+        {% block footer %}
+        <br>
+        <br> Created as a final project for CS304 {% endblock %}
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+</body>
+
+</html>
+<!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+{% extends "base.html" %}
+
+{% block content %}    
+<div><h1 id="home-title">welcome</h1></div>
+<h2 id="tag-line"> Incident Reporter is a web application for a safer and more aware learning environment.</h2>
+<div class="app-info">
+    <p id="about">About</p>
+    
+    It is imperative for one's educational experience that they feel safe in their learning environment.
+    
+    <br><br>
+    
+    In a student-professor relationship, a professor holds all the power.  But, it is very possible that a professor 
+    make a student feel unsafe.  These incidents should be addressed, even if the incident had no malicious intent 
+    as addressing issues is part of the learning experience for all.
+    
+    <br><br>
+    
+    Incident Reporter protects students while allowing proper actions to be taken to ensure a safe learning environment for all.
+    In reporting incidents, students are given agency in determining the level of anonyminity they are comfortable with. There are
+    many situations where a student might not feel comfortable identifying themselves, given the power professor hold over students.
+    
+    <br><br>
+    
+    At the same time, Incident Reporter protects professors from unfounded claims.  In submitting an incident against a professor,
+    students are expected to identify a faculty or staff member to act as their advocate.  This advocate will act as the liaison between
+    the student and the reported, allowing the reported to ask for clarification while still protecting student's privacy.
+    
+    <br><br>
+    
+    Finally, Incident Reporter allows institutions to work towards data-driven actions against discriminatory actions.
+    By allowing community administrators birds-eye-level views of data, administrators are given the ability to identify
+    patterns and take action if necessary.
+</div>    
+<article>
+    
+</article>
+{% endblock %}<!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+<!DOCTYPE html>
+<html lang='en'>
+
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+    <table class="table table-hover" id="incident-list">
+  <thead>
+    <tr>
+      <th scope="col">Report ID</th>
+      <th scope="col">Incident Date</th>
+      
+      {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
+                    <!-- Only for admin and facstaff --> 
+                    <th>Reporter</th> <!-- Anonymize if necessary -->
+                    {% endif %}
+       
+       {% if userInfo.role == "student" or userInfo.isAdmin %}
+                    <!-- Only for student and admin -->
+                    <th>Reported</th> <!-- Will be ID, maybe we can do an inner join to get the name of this person later on -->
+                    {% endif %}
+                    
+      <th scope="col">Advocate</th>
+      <th scope="col">Description</th>
+      <th scope="col">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+  
+    {% for incident in incidentsList %}
+                    
+        <tr>
+            <td>{{incident.reportID}}</td>
+            <td>{{incident.dateOfIncident}}</td>
+                        
+    <!-- Reporter name (for facstaff and admin) -->
+
+    {% if userInfo.role == "facstaff" %}
+        {% if not userInfo.isAdmin %}
+            {% if incident.anonymousToReported == 1 %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.reporterName}}</td> 
+            {% endif %}
+
+        {% else %} <!-- user is admin -->
+            {% if incident.anonymousToAll == 1 %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.reporterName}}</td> 
+            {% endif %}
+        {% endif %}
+   {% endif %}     
+                        <!-- Reported name (for student or admin) -->
+                        {% if userInfo.role == "student" %}
+                        <td>{{incident.reportedName}}</td> 
+                        {% endif %} 
+                        
+                        {% if userInfo.isAdmin %}
+                        <td>{{incident.reportedName}}</td> 
+                        {% endif %}
+                        
+                        <!--AdvocateName-->
+                        <td>{{incident.advocateName}}</td>
+                    
+                        <td>{{incident.description}}</td> 
+                        
+                        
+                        <td>
+                            <form action="{{ url_for('incidentDetailPage', id=incident.reportID) }}">
+                                <input type="submit" value="More Details">
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+         
+    </body>
+{% endblock %}
+</html><!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+<!DOCTYPE html>
+<html lang='en'>
+
+{% extends "base.html" %}
+
+{% block content %}
+    <body>
+        Incident ID: {{incident.reportID}} <br>
+        {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
+            <!-- Only for admin and facstaff --> 
+            Reporter: <!-- Anonymize if necessary -->
+        {% endif %}  
+        
+        {% if userInfo.role == "facstaff" %}
+            {% if incident.anonymousToReported %}
+                Anonymous
+            {% else %}
+                {{incident.reporterID}}
+            {% endif %}
+        {% endif %}
+        
+        {% if userInfo.isAdmin %}
+            {% if incident.anonymousToAll %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.name}}</td> 
+            {% endif %}
+        {% endif %}
+        <br>
+        
+        Reported: {{incident.reportedID}} <br>
+        Advocate: {{incident.advocateID}} <br>
+        location: {{incident.location}} <br>
+        category: {{incident.category}} <br>
+        dateOfIncident: {{incident.dateOfIncident}} <br>
+        description: {{incident.description}}
+        
+        <form action="{{ url_for('deleteIncident', id=incident.reportID) }}">
+            <input type="submit" value="Delete Incident">
+        </form>
+    </body>
+{% endblock %}
+</html><!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+<!DOCTYPE html>
+
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 id="form-title"> Report an Incident </h2>
+<form action="{{url_for('incidentReport')}}" method="post">
+    
+    <h3 class="form-headings">Reporter Information</h3>
+    <div class="form-group">
+        
+    <label for="sname"> Reporter Name:
+        <input id="sname" type="text" name="sname" size="30" placeholder="Wendy Wellesley" autofocus>
+    </label>
+    </div>
+    
+<p id="anon1"> Do you want to remain anonymous to the person you are reporting?</p>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="anon-r" id="inlineRadio1" value="1">
+    <label class="form-check-label" for="anon-r">Yes</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="anon-r" id="inlineRadio2" value="0">
+    <label class="form-check-label" for="anon-r">No</label>
+</div>
+
+<p id="anon2"> Do you want to remain anonymous to everyone?</p>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="anon-all" id="inlineRadio1" value="1">
+    <label class="form-check-label" for="anon-r">Yes</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="anon-all" id="inlineRadio2" value="0">
+    <label class="form-check-label" for="anon-r">No</label>
+</div> <br>
+
+    <label for="advocate"> Advocate Name:
+    <select name="advocate" id="advocate">
+            <option value="">
+    {% for fac in facStaff %}
+            <option value= "{{fac.BNUM}}">{{fac.name}}</option>"
+    {% endfor %}
+            </select>
+    </label> <br>
+    
+    
+    
+    
+    <h3 class="form-headings"> Incident Information </h3>
+    
+    
+    <label for="faculty"> Who are you reporting?
+    <select name="faculty" id="faculty">
+            <option value="">
+    {% for fac in facStaff %}
+            <option value= "{{fac.BNUM}}">{{fac.name}}</option>"
+    {% endfor %}
+            </select>
+    </label> <br>
+    
+    <label for="location"> Location of Incident:
+        <input id="location" type="text" name="location" size="30" autofocus>
+    </label> <br>
+    
+    <label for="date"> Date of Incident: 
+        <input type="date" id="date" name="date">
+    </label> <br>
+    
+    <label for="category"> Type of Incident: 
+    <select name="category">
+            <option value="">
+            <option>Racism
+            <option>Ableism
+            <option>Sexism
+            <option>Sexual Harassment
+            <option>Other
+        </select>
+    </label> <br>
+    
+    <label for="description"> Description of the incident:
+        <textarea name="description" rows="10" cols="30"> </textarea>
+    </label>
+    
+    <p> <input type='submit' value='Submit'> </p>
+    
+</form>
+    
+    
+
+{% endblock %}
+@import url(http://fonts.googleapis.com/css?family=Roboto:400);
+body {
+  background-color:#fff;
+  -webkit-font-smoothing: antialiased;
+  font: normal 14px Roboto,arial,sans-serif;
+}
+
+.app-info {
+    font-size: 14px;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    padding-left: 150px;
+    padding-right: 150px;
+}
+
+#home-title, #tag-line {
+    text-align: center;
+}
+
+#tag-line {
+    font-size: 16px;
+}
+#about {
+    font-style: italic;
+}
+
+
+.login-box {
+    padding: 25px;
+    
+}
+
+.form-login {
+    background-color: #EDEDED;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: 15px;
+    border-color:#d2d2d2;
+    border-width: 5px;
+    box-shadow:0 1px 0 #cfcfcf;
+}
+
+h4 { 
+ border:0 solid #fff; 
+ border-bottom-width:1px;
+ padding-bottom:10px;
+ text-align: center;
+}
+
+.form-control {
+    border-radius: 10px;
+}
+
+#form-title {
+    text-align: center;
+}
+
+
+footer {
+    font-size: 12px;
+}
