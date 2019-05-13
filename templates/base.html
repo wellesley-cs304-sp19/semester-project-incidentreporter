@@ -19,7 +19,7 @@
     {% if userInfo == None %}
 
     <div class="login-box">
-        <div class="row">
+        <div class="row justify-content-center">
             <div class="col-md-offset-5 col-md-3">
                 <form method="POST" id="form" action="/setUID/">
                     <div class="form-login">
@@ -57,6 +57,7 @@
         {% endif %}
         
         <br>
+        
         {% if userID %} 
             You are logged in as user number {{ userID }}
         {% endif %}
