@@ -80,6 +80,8 @@ def getAllReportedFacstaff(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select reportID as reportID,
                             dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
                             reporterTab.name as reporterName,
                             advocateTab.name as advocateName,
                             reportedTab.name as reportedName
@@ -96,6 +98,8 @@ def getAllReportedAdvocate(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select reportID as reportID,
                                 dateOfIncident as dateOfIncident,
+                                anonymousToReported as anonymousToReported,
+                                anonymousToAll as anonymousToAll,
                                 reporterTab.name as reporterName,
                                 advocateTab.name as advocateName,
                                 reportedTab.name as reportedName
@@ -117,6 +121,8 @@ def getAllReportedStudent(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select reportID as reportID,
                             dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
                             reporterTab.name as reporterName,
                             advocateTab.name as advocateName,
                             reportedTab.name as reportedName,
@@ -138,6 +144,8 @@ def getAllIncidents(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select reportID as reportID,
                             dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
                             reporterTab.name as reporterName,
                             advocateTab.name as advocateName,
                             reportedTab.name as reportedName

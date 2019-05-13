@@ -146,6 +146,7 @@ def facstaffInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
+    print(incidentsList)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
 
