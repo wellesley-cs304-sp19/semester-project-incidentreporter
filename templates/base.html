@@ -1,98 +1,99 @@
 <!doctype html>
 <html lang='en'>
 <link rel='stylesheet' href="{{url_for('static',filename='report-style.css')}}">
+
 <head>
     <meta charset='utf-8'>
     <meta name=author content="Karina Lin, Julia Klugherz, Katherine Gao">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
     <title>{{title}}</title>
-    
+
     {% block headstuff %}{% endblock %}
 </head>
+
 <body>
+
+    <a href="{{url_for('home')}}">Home</a> 
     
-    <a href = "{{url_for('home')}}">Home</a>  
     {% if userInfo == None %}
 
-    
-        {% if userID %}
-You are logged in as user number {{ userID }}
-    {% else %}   
-    
-<div class="login-box">
-    <div class="row">
-        <div class="col-md-offset-5 col-md-3">
-        <form method="POST" id="form" action="/setUID/">
-            <div class="form-login">
-            <h4>Please Log In</h4>
-            <input type="text" id="email" name="email" class="form-control input-sm chat-input" placeholder="Email" />
-            </br>
-            <input type="text" name="user_id" id="user_id" class="form-control input-sm chat-input" placeholder="B-number" />
-            </br>
-            <div class="wrapper">
+    <div class="login-box">
+        <div class="row">
+            <div class="col-md-offset-5 col-md-3">
+                <form method="POST" id="form" action="/setUID/">
+                    <div class="form-login">
+                        <h4>Please Log In</h4>
+                        <input type="text" id="email" name="email" class="form-control input-sm chat-input" placeholder="Email" />
+                        </br>
+                        <input type="text" name="user_id" id="user_id" class="form-control input-sm chat-input" placeholder="B-number" />
+                        </br>
+                        <div class="wrapper">
                 </form>
-            <span class="group-btn">  
+                <span class="group-btn">  
                 <button id='loginbutton' type="submit" form="form" value="Submit" class="btn btn-primary btn-md">Submit<i class="fa fa-sign-in"></i></button>
             </span>
-            </div>
+                </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+    
+    {% else %} 
+        
+    
+        {% if userInfo.role == "student" %} 
+            ~ <a href="{{url_for('studentInbox')}}">Incidents You've Reported</a> 
+            ~ <a href="{{url_for('incidentReport')}}"> Report an Incident</a>  
+        {% endif %}
+    
+        {% if userInfo.role == "facstaff" %}
+            ~ <a href="{{url_for('facstaffInbox')}}">Incidents Reported Against You</a> 
+            ~ <a href="{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a> 
+        {% endif %} 
+        
+        {% if userInfo.isAdmin %}
+            ~ <a href="{{url_for('adminInbox')}}">All Incidents</a> ~ 
+        {% endif %}
+        
+        <br>
+        {% if userID %} 
+            You are logged in as user number {{ userID }}
+        {% endif %}
 
- {% endif %}
-    
-    {% else%}
-    {% if userInfo.role == "student" %}
-     ~ <a href = "{{url_for('studentInbox')}}">Incidents You've Reported</a>
-     ~ <a href = "{{url_for('incidentReport')}}"> Report an Incident</a>
-    {% else %}
-     ~ <a href = "{{url_for('facstaffInbox')}}">Incidents Reported Against You</a>
-     ~ <a href = "{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a> 
-    {% endif %}
-    
-    {% if userInfo.isAdmin %}
-    <a href = "{{url_for('adminInbox')}}">All Incidents</a> ~ 
-    {% endif %}
-     
     <form class="log-out" action="{{ url_for('logout') }}">
-            <input type="submit" value="Log Out">
+        <input type="submit" value="Log Out">
     </form>
     {% endif %}
-<p>
-    
-{% with messages = get_flashed_messages() %}
-   {% if messages %}
-      {% for message in messages %}
-         <p>{{ message }}</p>
-      {% endfor %}
-   {% endif %}
-{% endwith %}
+    <p>
+
+        {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %}
+    <p>{{ message }}</p>
+        {% endfor %} 
+        {% endif %} 
+        {% endwith %}
 
 
 
-</p>
+    </p>
 
-<div class="form-body">
-{% block content %}
+    <div class="form-body">
+        {% block content %}
 
-<h1>{{title}}</h1>
+        <h1>{{title}}</h1>
 
-{% endblock %}
-</div>
-<footer>
-    {% block footer %}
-    <br>
-    <br>
-    Created as a final project for CS304
-    {% endblock %}
-</footer>
+        {% endblock %}
+    </div>
+    <footer>
+        {% block footer %}
+        <br>
+        <br> Created as a final project for CS304 {% endblock %}
+    </footer>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 </body>
-  
+
 </html>
