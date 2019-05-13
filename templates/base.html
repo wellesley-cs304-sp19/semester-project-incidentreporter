@@ -14,7 +14,6 @@
 
 <body>
 
-    <a href="{{url_for('home')}}">Home</a> 
     
     {% if userInfo == None %}
 
@@ -42,29 +41,44 @@
     {% else %} 
         
     
-        {% if userInfo.role == "student" %} 
-            ~ <a href="{{url_for('studentInbox')}}">Incidents You've Reported</a> 
-            ~ <a href="{{url_for('incidentReport')}}"> Report an Incident</a>  
+        
+<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e3f2fd;">
+    
+    <a class="nav-item nav-link" href="{{url_for('home')}}">Home</a>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <div class="navbar-nav">
+  
+  {% if userInfo.role == "student" %} 
+  
+  
+      <a class="nav-item nav-link" href="{{url_for('studentInbox')}}">Incidents You've Reported</a>
+      <a class="nav-item nav-link" href="{{url_for('incidentReport')}}">Report an Incident</a>
+        
         {% endif %}
     
         {% if userInfo.role == "facstaff" %}
-            ~ <a href="{{url_for('facstaffInbox')}}">Incidents Reported Against You</a> 
-            ~ <a href="{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a> 
+        <a class="nav-item nav-link" href="{{url_for('facstaffInbox')}}">Incidents Reported Against You</a>
+        <a class="nav-item nav-link" href="{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a>
+        
         {% endif %} 
         
         {% if userInfo.isAdmin %}
-            ~ <a href="{{url_for('adminInbox')}}">All Incidents</a> ~ 
+        <a class="nav-item nav-link" href="{{url_for('adminInbox')}}">All Incidents</a>
         {% endif %}
         
+        <form class="form-inline" id="log-out" action="{{ url_for('logout') }}">
+        <input class="btn btn-sm btn-outline-secondary" type="submit" value="Log Out">
+        </form>
+    </div>
+  </div>
+</nav>
         <br>
         
         {% if userID %} 
             <div class="user-info">You are logged in as user number {{ userID }} </div>
         {% endif %}
 
-    <form id="log-out" action="{{ url_for('logout') }}">
-        <input class="btn btn-outline-dark" type="submit" value="Log Out">
-    </form>
+    
     {% endif %}
     <p>
 
@@ -73,8 +87,6 @@
         {% endfor %} 
         {% endif %} 
         {% endwith %}
-
-
 
     </p>
 
