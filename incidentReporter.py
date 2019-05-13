@@ -82,6 +82,7 @@ def getAllReportedFacstaff(conn, BNUM):
                             dateOfIncident as dateOfIncident,
                             anonymousToReported as anonymousToReported,
                             anonymousToAll as anonymousToAll,
+                            description as description,
                             reporterTab.name as reporterName,
                             advocateTab.name as advocateName,
                             reportedTab.name as reportedName
@@ -102,7 +103,8 @@ def getAllReportedAdvocate(conn, BNUM):
                                 anonymousToAll as anonymousToAll,
                                 reporterTab.name as reporterName,
                                 advocateTab.name as advocateName,
-                                reportedTab.name as reportedName
+                                reportedTab.name as reportedName,
+                                incident.description as description
                                 
                                 from incident 
                             inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
@@ -148,7 +150,8 @@ def getAllIncidents(conn):
                             anonymousToAll as anonymousToAll,
                             reporterTab.name as reporterName,
                             advocateTab.name as advocateName,
-                            reportedTab.name as reportedName
+                            reportedTab.name as reportedName,
+                            incident.description as description
                             
                             from incident 
                         inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
