@@ -116,8 +116,7 @@ def incidentReport():
                                 userInfo = userInfo)
     else:
         rID = request.form['faculty']
-        aName = request.form['advocate']
-        aID = incidentReporter.getIDFromName(conn, aName)
+        aID = request.form['advocate']
         
         # a person cannot report themselves
         if uid == rID:

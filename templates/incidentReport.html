@@ -36,14 +36,18 @@
 <div class="form-check form-check-inline">
     <input class="form-check-input" type="radio" name="anon-all" id="inlineRadio2" value="0">
     <label class="form-check-label" for="anon-r">No</label>
-</div>
+</div> <br>
 
-    
-    <div class="form-group">
     <label for="advocate"> Advocate Name:
-        <input id="advocate" type="text" name="advocate" size="30" placeholder="Trusted Friend" autofocus>
-    </label>
-    </div>
+    <select name="advocate" id="advocate">
+            <option value="">
+    {% for fac in facStaff %}
+            <option value= "{{fac.BNUM}}">{{fac.name}}</option>"
+    {% endfor %}
+            </select>
+    </label> <br>
+    
+    
     
     
     <h3 class="form-headings"> Incident Information </h3>
