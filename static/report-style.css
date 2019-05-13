@@ -27,6 +27,7 @@ body {
 
 .login-box {
     padding: 25px;
+    
 }
 
 .form-login {
@@ -51,6 +52,11 @@ h4 {
 .form-control {
     border-radius: 10px;
 }
+
+#form-title {
+    text-align: center;
+}
+
 
 footer {
     font-size: 12px;

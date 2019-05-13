@@ -19,13 +19,9 @@ home() route renders home page and login box, if necessary
 '''
 @app.route('/')
 def home():
-    try:
-        uid = session['UID']
-        print(uid)
-    except:
-        uid = None
-    conn = incidentReporter.getConn('c9')   
+    uid=session.get('UID')
     if uid:
+        conn = incidentReporter.getConn('c9')
         userInfo = incidentReporter.getUserInformation(conn, uid)
         return render_template('home.html',
                                 userID = uid, 
