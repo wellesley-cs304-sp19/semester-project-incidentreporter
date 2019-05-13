@@ -7,10 +7,11 @@
 
 {% block content %}
 
-<h2 id="form-title"> Report an Incident </h2>
+<h2 id="form-title">Report an Incident</h2>
+<div class="row justify-content-center">
 <form action="{{url_for('incidentReport')}}" method="post">
     
-    <h3 class="form-headings">Reporter Information</h3>
+    <h4 class="form-headings">Reporter Information</h4>
     <div class="form-group">
         
     <label for="sname"> Reporter Name:
@@ -50,7 +51,7 @@
     
     
     
-    <h3 class="form-headings"> Incident Information </h3>
+    <h4 class="form-headings"> Incident Information </h4>
     
     
     <label for="faculty"> Who are you reporting?
@@ -85,10 +86,10 @@
         <textarea name="description" rows="10" cols="30"> </textarea>
     </label>
     
-    <p> <input class="btn btn-outline-dark" type='submit' value='Submit'> </p>
+    <p id="enter"> <input class="btn btn-outline-success" type='submit' value='Submit'> </p>
     
 </form>
-    
+</div>
     
 
 {% endblock %}

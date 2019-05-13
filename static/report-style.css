@@ -53,9 +53,7 @@ h4 {
  text-align: center;
 }
 
-.form-control {
-    border-radius: 10px;
-}
+
 
 #form-title {
     text-align: center;
@@ -75,9 +73,12 @@ h4 {
     margin-right: auto;
 }
 
+
 #delete {
     padding-top: 10px;
 }
+
+
 footer {
     font-size: 12px;
 }
