@@ -46,7 +46,7 @@
             {% endif %}
 
         {% else %} <!-- user is admin -->
-            {% if incident.anonymousToAll %}
+            {% if incident.anonymousToAll == 1 %}
                 <td>Anonymous</td>
             {% else %}
                 <td>{{incident.reporterName}}</td> 
