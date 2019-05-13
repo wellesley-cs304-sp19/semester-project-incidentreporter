@@ -48,8 +48,8 @@
     <h3 class="form-headings"> Incident Information </h3>
     
     
-    <label for="reported"> Who are you reporting?
-    <select name="faculty">
+    <label for="faculty"> Who are you reporting?
+    <select name="faculty" id="faculty">
             <option value="">
     {% for fac in facStaff %}
             <option value= "{{fac.name}}">{{fac.name}}</option>"
