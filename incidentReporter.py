@@ -138,11 +138,8 @@ def getAllReportedStudent(conn, BNUM):
     return curs.fetchall()
     
     
-''' getAllIncidents(conn) gets all reported incidents (for admin view)
-***For some reason I'm getting reported.name... etc but not reporter.name,
-the reporter just shows up as "name", I think I need an 'as', 
-Also might need another inner join for advocate*** '''
-def getAllIncidents(conn):
+''' getAllIncidents(conn) gets all reported incidents (for admin view)'''
+def getAllIncidentsInbox(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select reportID as reportID,
                             dateOfIncident as dateOfIncident,
@@ -160,12 +157,43 @@ def getAllIncidents(conn):
                         ''')
     return curs.fetchall()
 
+''' getAllIncidents(conn) gets all reported incidents for admins to view as aggregate data'''
+def getAllIncidentsAggregate(conn):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select dateOfIncident as dateOfIncident,
+                            reportedTab.name as reportedName,
+                            incident.location as location,
+                            incident.category as category
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        ''')
+    return curs.fetchall()
+
 '''
 This function gets one incident based on reportID
 '''
 def getIncidentInfo(conn, id):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select * from incident where reportID = %s''', [id])
+    curs.execute('''select reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName,
+                            incident.description as description,
+                            incident.location as location,
+                            incident.category as category
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        where reportID = %s
+                        ''', [id])
     return curs.fetchone()
 
 '''

@@ -64,6 +64,7 @@
         
         {% if userInfo.isAdmin %}
         <a class="nav-item nav-link" href="{{url_for('adminInbox')}}">All Incidents</a>
+        <a class="nav-item nav-link" href="{{url_for('aggregate')}}">Aggregate Data Dashboard</a>
         {% endif %}
         
         <form class="form-inline" id="log-out" action="{{ url_for('logout') }}">

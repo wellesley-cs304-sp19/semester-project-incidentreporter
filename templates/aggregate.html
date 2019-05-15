@@ -1,0 +1,36 @@
+<!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+<!DOCTYPE html>
+<html lang='en'>
+
+{% extends "base.html" %}
+
+{% block content %}
+    <body>
+        <div id="detail-box" class="row justify-content-center">
+            There have been {{numWeek}} incident(s) this week.
+        </div>
+        
+        <div id="detail-box" class="row justify-content-center">
+            Below are the number of incidents each person has been reported for:<br>
+            {% for key,value in reportedCounts.iteritems() %}
+                {{key}}: {{value}} <br>
+            {% endfor %}
+        </div>
+        
+        <div id="detail-box" class="row justify-content-center">
+            Below are the number of incidents per location:<br>
+            {% for key,value in locationCounts.iteritems() %}
+                {{key}}: {{value}}<br>
+            {% endfor %}
+        </div>
+        
+        <div id="detail-box" class="row justify-content-center">
+            Below are the number of incidents per category:<br>
+            {% for key,value in categoryCounts.iteritems() %}
+                {{key}}: {{value}}<br>
+            {% endfor %}
+        </div>
+    </body>
+{% endblock %}
+</html>

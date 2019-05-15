@@ -8,7 +8,7 @@ To run the project, type in 'python app.py' in the terminal.
 '''
 
 from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify)
-import sys, json, incidentReporter
+import sys, json, incidentReporter, datetime
 
 app = Flask(__name__)
 app.secret_key = 'secretkey123'
@@ -84,6 +84,73 @@ def incidentDetailPage(id):
     userInfo = incidentReporter.getUserInformation(conn, uid)
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
     return render_template('incidentDetailPage.html', userInfo=userInfo, userID=uid, incident=incidentInfo)
+   
+   
+'''
+aggregate shows the admin the data in helpful aggregated forms
+'''            
+@app.route('/aggregate')
+def aggregate():
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    incidentInfo = incidentReporter.getAllIncidentsAggregate(conn)
+    
+    numIncidentsThisWeek = getNumIncidentsThisWeek(incidentInfo)
+    incidentByReported = getIncidentsThisReported(incidentInfo)
+    incidentByLocation = getIncidentByLocation(incidentInfo)
+    incidentByCategory = getIncidentByCategory(incidentInfo)
+    
+    return render_template('aggregate.html', 
+                            userInfo=userInfo, 
+                            userID=uid,
+                            numWeek=numIncidentsThisWeek,
+                            reportedCounts=incidentByReported,
+                            locationCounts=incidentByLocation,
+                            categoryCounts=incidentByCategory)
+                            
+def getNumIncidentsThisWeek(incidentInfo):
+    result = 0
+    for incident in incidentInfo:
+        if (incident['dateOfIncident'] + datetime.timedelta(days=7) >= datetime.datetime.now().date()):
+            result += 1
+    return result
+
+def getIncidentsThisReported(incidentInfo):
+    result = {}
+    for incident in incidentInfo:
+        reported = incident['reportedName']
+        if reported in result.keys():
+            temp = result[reported]
+            temp += 1
+            result[reported] = temp
+        else:
+            result[reported] = 1
+    return result
+    
+def getIncidentByLocation(incidentInfo):
+    result = {}
+    for incident in incidentInfo:
+        location = incident['location'].lower().replace(" ", "")
+        if location in result.keys():
+            temp = result[location]
+            temp += 1
+            result[location] = temp
+        else:
+            result[location] = 1
+    return result
+    
+def getIncidentByCategory(incidentInfo):
+    result = {}
+    for incident in incidentInfo:
+        category = incident['category']
+        if category in result.keys():
+            temp = result[category]
+            temp += 1
+            result[category] = temp
+        else:
+            result[category] = 1
+    return result
     
 '''
 deleteIncident(id) deletes incident report
@@ -170,7 +237,7 @@ adminInbox() displays all reported incidents (for admin)
 def adminInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
-    incidentsList = incidentReporter.getAllIncidents(conn)
+    incidentsList = incidentReporter.getAllIncidentsInbox(conn)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
 

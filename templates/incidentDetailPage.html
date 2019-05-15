@@ -18,7 +18,7 @@
             {% if incident.anonymousToReported %}
                 Anonymous
             {% else %}
-                {{incident.reporterID}}
+                {{incident.reporterName}}
             {% endif %}
         {% endif %}
         
@@ -26,13 +26,13 @@
             {% if incident.anonymousToAll %}
                 <td>Anonymous</td>
             {% else %}
-                <td>{{incident.name}}</td> 
+                <td>{{incident.reporterName}}</td> 
             {% endif %}
         {% endif %}
         <br>
         
-        Reported: {{incident.reportedID}} <br>
-        Advocate: {{incident.advocateID}} <br>
+        Reported: {{incident.reportedName}} <br>
+        Advocate: {{incident.advocateName}} <br>
         Location: {{incident.location}} <br>
         Category: {{incident.category}} <br>
         Date of Incident: {{incident.dateOfIncident}} <br>
@@ -47,6 +47,7 @@
         </form>
         </div>
         </div>
+        
     </body>
 {% endblock %}
 </html>
