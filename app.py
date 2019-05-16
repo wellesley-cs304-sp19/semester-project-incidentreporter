@@ -10,6 +10,7 @@ To run the project, type in 'python app.py' in the terminal.
 from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify, Response)
 import sys, json, incidentReporter, imghdr, datetime
 from werkzeug import secure_filename
+from threading import Lock
 
 app = Flask(__name__)
 app.secret_key = 'secretkey123'
@@ -30,7 +31,7 @@ def home():
     else:
         userInfo = None
         return render_template('home.html', userID=uid, userInfo=userInfo)
-       
+
 '''
 setUID() is a login route that
 - Checks to make sure that credentials are submitted (not blank)
@@ -41,8 +42,6 @@ setUID() is a login route that
 @app.route('/setUID/', methods=['POST'])
 def setUID():
     if request.method == 'POST':
-        print(request.form)
-        
         uid = request.form.get('user_id')
         # User attempts to log in without any credentials
         if uid == '': 
@@ -119,11 +118,14 @@ incidentReport() houses the main incident report form for students
 '''    
 @app.route('/incidentReport', methods=['POST', 'GET'])
 def incidentReport():
+    reportLock = Lock()
+    reportLock.acquire()
     conn = incidentReporter.getConn('c9')
     uid = session['UID']
     if request.method == 'GET':
         userInfo = incidentReporter.getUserInformation(conn, uid)
         facStaff = incidentReporter.getFacStaff(conn)
+        reportLock.release()
         return render_template('incidentReport.html', 
                                 userID = uid, 
                                 facStaff = facStaff,
@@ -153,6 +155,7 @@ def incidentReport():
                 raise Exception('Not a JPEG, GIF, PNG, or PDF: {}'.format(mime_type))
             upload = f.read()
             incidentReporter.insertIncident(conn, info, uid, rID, aID, upload)
+            reportLock.release()
             return redirect(url_for('studentInbox'))
 
 '''
@@ -164,7 +167,6 @@ def studentInbox():
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
     userInfo = incidentReporter.getUserInformation(conn, uid)
-    print(incidentsList)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
     
 '''
@@ -175,7 +177,6 @@ def facstaffInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
-    print(incidentsList)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
 

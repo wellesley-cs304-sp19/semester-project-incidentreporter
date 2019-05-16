@@ -76,7 +76,6 @@ def insertIncident(conn, form, uid, rID, aID, attachment):
     # Only upload a blob if the user inputted a file
     if attachment is not None:
         reportID = curs.lastrowid
-        print("reportID: ", reportID)
         uploadFile(conn, attachment, reportID)
     
 '''

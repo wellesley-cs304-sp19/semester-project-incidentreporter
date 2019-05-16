@@ -18,8 +18,8 @@ insert into user (BNUM, name, email, isAdmin, role) values (00000005, "Student 5
 insert into user (BNUM, name, email, isAdmin, role) values (00000000, "Admin", "admin@wellesley.edu", true, "facstaff");
 insert into user (BNUM, name, email, isAdmin, role) values (10000000, "FacStaff 1", "facstaff1@wellesley.edu", false, "facstaff");
 insert into user (BNUM, name, email, isAdmin, role) values (20000000, "FacStaff 2", "facstaff2@wellesley.edu", false, "facstaff");
-insert into user (BNUM, name, email, isAdmin, role) values (30000000, "FacStaff 3", "facstaff 3@wellesley.edu", false, "facstaff");
-insert into user (BNUM, name, email, isAdmin, role) values (40000000, "FacStaff 4", "Facstaff 4@wellesley.edu", false, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (30000000, "FacStaff 3", "facstaff3@wellesley.edu", false, "facstaff");
+insert into user (BNUM, name, email, isAdmin, role) values (40000000, "FacStaff 4", "Facstaff4@wellesley.edu", false, "facstaff");
 
 delete from incident; 
 insert into incident (reporterID, reportedID, advocateID, location, category, dateOfIncident, anonymousToAll, anonymousToReported, description) 
