@@ -9,6 +9,7 @@ use c9;
 
 drop table if exists incident;
 drop table if exists user;
+drop table if exists uploadblob;
 
 create table user(
 	BNUM		integer primary key,
@@ -36,3 +37,10 @@ create table incident(
 )
 ENGINE = InnoDB;
 
+create table uploadblob(
+	reportID integer primary key,
+	file blob,
+	foreign key (reportID) references incident(reportID)
+	on delete cascade 
+)
+ENGINE = InnoDB;

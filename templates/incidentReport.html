@@ -9,7 +9,7 @@
 
 <h2 id="form-title">Report an Incident</h2>
 <div class="row justify-content-center">
-<form action="{{url_for('incidentReport')}}" method="post">
+<form action="{{url_for('incidentReport')}}" method="post" enctype="multipart/form-data">
     
     <h4 class="form-headings">Reporter Information</h4>
     <div class="form-group">
@@ -85,6 +85,9 @@
     <label for="description"> Description of the incident:
         <textarea name="description" rows="10" cols="30"> </textarea>
     </label>
+    
+    <p><label for="file">Upload a file: <input type="file" name="file"></label></p>
+
     
     <p id="enter"> <input class="btn btn-outline-success" type='submit' value='Submit'> </p>
     

@@ -59,8 +59,9 @@ def getFacStaff(conn):
 '''
 insertIncident(conn, form, uid, rID, aID) creates an incident report and 
 adds it to the database
+- Gets the most recent ID and calls insertBlob() with this reportID
 '''    
-def insertIncident(conn, form, uid, rID, aID):
+def insertIncident(conn, form, uid, rID, aID, uploadBlob):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     add = ("insert into incident " 
            "(reporterID,reportedID,advocateID,location,category,dateOfIncident,anonymousToAll,anonymousToReported,description)"
@@ -71,7 +72,22 @@ def insertIncident(conn, form, uid, rID, aID):
     curs.execute(add, values)
     conn.commit()
     
-        
+    # Only upload a blob if the user inputted a file
+    if uploadBlob is not None:
+        reportID = curs.lastrowid
+        print("reportID: ", reportID)
+        insertBlob(conn, uploadBlob, reportID)
+    
+'''
+insertBlob(conn, uploadBlob, reportID) is called in insertIncident() after a 
+report is created when a user uploads a file
+'''      
+def insertBlob(conn, uploadBlob, reportID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''insert into uploadblob(reportID, file) values (%s,%s)''', [reportID, uploadBlob])
+    conn.commit()
+
+
 '''
 getAllReportedFacstaff(conn, BNUM) Gets all incidents reported about a specific 
 facstaff user by their BNUM, and also the name of the student who reported
