@@ -7,13 +7,14 @@ Julia Klugherz, Karina Lin, Katherine Gao
 
 use c9;
 
+drop table if exists uploadblob;
 drop table if exists incident;
 drop table if exists user;
-drop table if exists uploadblob;
+
 
 create table user(
 	BNUM		integer primary key,
-	name 	varchar(100),
+	name 		varchar(100),
 	email 		varchar(30),
 	isAdmin 	Boolean,
 	role 		enum ('facstaff', 'student')
@@ -33,7 +34,7 @@ create table incident(
     description		        varchar(100),
     foreign key (reporterID) references user(BNUM),
     foreign key (reportedID) references user(BNUM),
-    Foreign key (advocateID) references user(BNUM)
+    foreign key (advocateID) references user(BNUM)
 )
 ENGINE = InnoDB;
 
