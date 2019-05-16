@@ -25,6 +25,11 @@
                     
       <th scope="col">Advocate</th>
       <th scope="col">Description</th>
+      
+      {% if userInfo.role == "student" or userInfo.isAdmin %}
+      <th scope="col">Attachments</th>
+      {% endif %}
+      
       <th scope="col">Details</th>
     </tr>
   </thead>
@@ -53,27 +58,38 @@
                 <td>{{incident.reporterName}}</td> 
             {% endif %}
         {% endif %}
-   {% endif %}     
-                        <!-- Reported name (for student or admin) -->
-                        {% if userInfo.role == "student" %}
-                        <td>{{incident.reportedName}}</td> 
-                        {% endif %} 
+    {% endif %}     
+    
+            <!-- Reported name (for student or admin) -->
+            {% if userInfo.role == "student" %}
+            <td>{{incident.reportedName}}</td> 
+            {% endif %} 
+            
+            {% if userInfo.isAdmin %}
+            <td>{{incident.reportedName}}</td> 
+            {% endif %}
+            
+            <!--AdvocateName-->
+            <td>{{incident.advocateName}}</td>
+        
+            <td>{{incident.description}}</td> 
+            
+            <!-- Attachment column -->
+            <td>
+                {% if incident.file %} 
+                <form action="{{ url_for('attachment', reportID=incident.reportID) }}">
+                    <input class="btn btn-outline-dark" type="submit" value="View File">
+                </form>
+                {% endif %}
+            </td>
+            
+            <td>
+                <form action="{{ url_for('incidentDetailPage', id=incident.reportID) }}">
+                    <input class="btn btn-outline-dark" type="submit" value="More Details">
+                </form>
+            </td>
+            
                         
-                        {% if userInfo.isAdmin %}
-                        <td>{{incident.reportedName}}</td> 
-                        {% endif %}
-                        
-                        <!--AdvocateName-->
-                        <td>{{incident.advocateName}}</td>
-                    
-                        <td>{{incident.description}}</td> 
-                        
-                        
-                        <td>
-                            <form action="{{ url_for('incidentDetailPage', id=incident.reportID) }}">
-                                <input class="btn btn-outline-dark" type="submit" value="More Details">
-                            </form>
-                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>

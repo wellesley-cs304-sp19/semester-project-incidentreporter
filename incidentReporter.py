@@ -56,12 +56,13 @@ def getFacStaff(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select name, BNUM from user where role = "facstaff"''')
     return curs.fetchall()
+    
 '''
 insertIncident(conn, form, uid, rID, aID) creates an incident report and 
 adds it to the database
 - Gets the most recent ID and calls insertBlob() with this reportID
 '''    
-def insertIncident(conn, form, uid, rID, aID, uploadBlob):
+def insertIncident(conn, form, uid, rID, aID, attachment):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     add = ("insert into incident " 
            "(reporterID,reportedID,advocateID,location,category,dateOfIncident,anonymousToAll,anonymousToReported,description)"
@@ -73,19 +74,26 @@ def insertIncident(conn, form, uid, rID, aID, uploadBlob):
     conn.commit()
     
     # Only upload a blob if the user inputted a file
-    if uploadBlob is not None:
+    if attachment is not None:
         reportID = curs.lastrowid
         print("reportID: ", reportID)
-        insertBlob(conn, uploadBlob, reportID)
+        uploadFile(conn, attachment, reportID)
     
 '''
 insertBlob(conn, uploadBlob, reportID) is called in insertIncident() after a 
 report is created when a user uploads a file
 '''      
-def insertBlob(conn, uploadBlob, reportID):
+def uploadFile(conn, attachment, reportID):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''insert into uploadblob(reportID, file) values (%s,%s)''', [reportID, uploadBlob])
+    curs.execute('''insert into uploadblob(reportID, file) values (%s,%s)''', [reportID, attachment])
     conn.commit()
+
+'''
+'''
+def getAttachment(conn, reportID):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select file from uploadblob where reportID = %s''', [reportID])
+    return curs.fetchone()
 
 
 '''
@@ -137,19 +145,21 @@ in the report
 '''
 def getAllReportedStudent(conn, BNUM):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select reportID as reportID,
+    curs.execute('''select incident.reportID as reportID,
                             dateOfIncident as dateOfIncident,
                             anonymousToReported as anonymousToReported,
                             anonymousToAll as anonymousToAll,
                             reporterTab.name as reporterName,
                             advocateTab.name as advocateName,
                             reportedTab.name as reportedName,
-                            incident.description as description
+                            incident.description as description, 
+                            attachment.file as file
                             
                             from incident 
                         inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
                         inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
                         inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        left join uploadblob attachment on incident.reportID=attachment.reportID
                         where reporterID=%s''', [BNUM])
     return curs.fetchall()
     
@@ -157,19 +167,21 @@ def getAllReportedStudent(conn, BNUM):
 ''' getAllIncidents(conn) gets all reported incidents (for admin view)'''
 def getAllIncidentsInbox(conn):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select reportID as reportID,
+    curs.execute('''select incident.reportID as reportID,
                             dateOfIncident as dateOfIncident,
                             anonymousToReported as anonymousToReported,
                             anonymousToAll as anonymousToAll,
                             reporterTab.name as reporterName,
                             advocateTab.name as advocateName,
                             reportedTab.name as reportedName,
-                            incident.description as description
+                            incident.description as description,
+                            attachment.file as file
                             
                             from incident 
                         inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
                         inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
                         inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        left join uploadblob attachment on incident.reportID=attachment.reportID
                         ''')
     return curs.fetchall()
 
@@ -225,4 +237,4 @@ if __name__ == '__main__':
     conn = getConn('c9')
     # print(getAllReportedFacstaff(conn, 10000000))
     # print(getAllReportedStudent(conn, 1))
-    print(getAllIncidents(conn))
+    # print(getAllIncidents(conn))
