@@ -78,6 +78,39 @@ def insertIncident(conn, form, uid, rID, aID, attachment):
         reportID = curs.lastrowid
         uploadFile(conn, attachment, reportID)
     
+    
+def updateIncident(conn, reportID, 
+                        anonymousToReported,
+                        anonymousToAll,                            
+                        advocateID,
+                        reportedID,
+                        location,
+                        date,
+                        category,
+                        description):
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    
+    curs.execute('''UPDATE incident
+                    SET anonymousToReported = %s,
+                        anonymousToAll = %s,                           
+                        advocateID = %s,
+                        reportedID = %s,
+                        location = %s,
+                        dateOfIncident = %s,
+                        category = %s,
+                        description = %s
+                    WHERE reportID = %s; ''', [anonymousToReported,
+                                                anonymousToAll,                            
+                                                advocateID,
+                                                reportedID,
+                                                location,
+                                                date,
+                                                category,
+                                                description,
+                                                reportID])
+    conn.commit()
+    return True
+    
 '''
 insertBlob(conn, uploadBlob, reportID) is called in insertIncident() after a 
 report is created when a user uploads a file
@@ -216,6 +249,7 @@ def getIncidentInfo(conn, id):
                             incident.category as category,
                             incident.reporterID as reporterID,
                             incident.reportedID as reportedID,
+                            incident.advocateID as advocateID,
                             attachment.file as file
                             
                             

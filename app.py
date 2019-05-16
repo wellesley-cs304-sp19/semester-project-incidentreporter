@@ -104,6 +104,7 @@ def editDetailPage(id):
     userInfo = incidentReporter.getUserInformation(conn, uid)
     facStaff = incidentReporter.getFacStaff(conn)
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
+    print(incidentInfo['category'])
     return render_template('incidentReport.html', 
                             userID = uid, 
                             facStaff = facStaff,
@@ -168,6 +169,37 @@ def studentInbox():
     incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
     userInfo = incidentReporter.getUserInformation(conn, uid)
     return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+    
+'''
+updateIncident() is used to update the incident
+'''    
+@app.route('/updateIncident')
+def updateIncident():
+    print("hellllowoeifweighewioh")
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    
+    reportID = request.form.get('reportID')
+    anonymousToReported = request.form.get('anonymousToReported')
+    anonymousToAll = request.form.get('anonymousToAll')
+    advocateID = request.form.get('advocateID')
+    reportedID = request.form.get('reportedID')
+    location = request.form.get('location')
+    date = request.form.get('date')
+    category = request.form.get('category')
+    description = request.form.get('description')
+    
+    success = incidentReporter.updateIncident(conn, reportID, 
+                                                    anonymousToReported, 
+                                                    anonymousToAll, 
+                                                    advocateID,
+                                                    reportedID,
+                                                    location,
+                                                    date,
+                                                    category,
+                                                    description)
+                                                    
+    return jsonify({'success': success})
     
 '''
 facstaffInbox() displays all incidents reports in which the facstaff is reported 

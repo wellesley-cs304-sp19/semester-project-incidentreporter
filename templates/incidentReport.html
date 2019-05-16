@@ -5,33 +5,44 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h6 id="message">not yet saved</h6>
 
-<h2 id="form-title">Report an Incident</h2>
+{% if incidentInfo.submit == True %}
+{% else %} 
+    <h6 id="message">not yet saved</h6>
+{% endif %}
+
+{% if incidentInfo.submit == True %}
+    <h2 id="form-title">Report an Incident</h2>
+{% else %}
+    <h2 id="form-title">Edit an Incident</h2>
+{% endif %}
+
+
 <div class="row justify-content-center">
-<form action="{{url_for('incidentReport')}}" method="post" enctype="multipart/form-data">
+<form action="{{url_for('incidentReport')}}" method="post" enctype="multipart/form-data" id="submissionform">
     
     <h4 class="form-headings">Reporter Information</h4>
     <div class="form-group">
+    <h7 hidden id="reportID" value={{incidentInfo.reportID}}> {{incidentInfo.reportID}} </h7>
 
     
 <p id="anon1"> Do you want to remain anonymous to the person you are reporting?</p>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-r" id="inlineRadio1" value="1">
-    <label class="form-check-label" for="anon-r">Yes</label>
+    <input class="form-check-input" type="radio" name="anon-r" id="inlineRadio1" value="1" {% if 1==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
+    <label class="form-check-label" for="anon-r" >Yes</label>
 </div>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-r" id="inlineRadio2" value="0">
+    <input class="form-check-input" type="radio" name="anon-r" id="inlineRadio2" value="0" {% if 0==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
     <label class="form-check-label" for="anon-r">No</label>
 </div>
 
 <p id="anon2"> Do you want to remain anonymous to everyone?</p>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-all" id="inlineRadio1" value="1">
+    <input class="form-check-input" type="radio" name="anon-all" id="inlineRadio3" value="1" {% if 1==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
     <label class="form-check-label" for="anon-r">Yes</label>
 </div>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-all" id="inlineRadio2" value="0">
+    <input class="form-check-input" type="radio" name="anon-all" id="inlineRadio4" value="0" {% if 0==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
     <label class="form-check-label" for="anon-r">No</label>
 </div> <br>
 
@@ -39,18 +50,18 @@
     <select name="advocate" id="advocate">
             <option value="">
     {% for fac in facStaff %}
-            <option value="{{fac.BNUM}}" {% if incidentInfo.advocateID == fac.BNUM %} selected="selected"{% endif %}>{{fac.name}}</option>"
+            <option value="{{fac.BNUM}}" {% if fac.BNUM==incidentInfo.advocateID %} selected="selected"{% endif %}> {{fac.name}} </option>
     {% endfor %}
             </select>
     </label> <br>
     
     <h4 class="form-headings"> Incident Information </h4>
-    
     <label for="faculty"> Who are you reporting?
+   
     <select name="faculty" id="faculty">
             <option value="">
     {% for fac in facStaff %}
-            <option value= "{{fac.BNUM}}">{{fac.name}}</option>"
+            <option value= "{{fac.BNUM}}" {% if fac.BNUM==incidentInfo.reportedID %} selected="selected"{% endif %}>{{fac.name}}</option>
     {% endfor %}
             </select>
     </label> <br>
@@ -63,14 +74,14 @@
         <input type="date" id="date" value = "{{incidentInfo.dateOfIncident}}" name="date">
     </label> <br>
     
-    <label for="category"> Type of Incident: 
-    <select name="category">
+    <label for="category" > Type of Incident: 
+    <select name="category" id="category">
             <option value="">
-            <option>Racism
-            <option>Ableism
-            <option>Sexism
-            <option>Sexual Harassment
-            <option>Other
+            <option value= "racism" {% if incidentInfo.category=="racism" %} selected="selected"{% endif %}>Racism</option>
+            <option value= "ableism" {% if incidentInfo.category == "ableism" %} selected="selected"{% endif %}>Ableism</option>
+            <option value= "sexism" {% if incidentInfo.category == "sexism" %} selected="selected"{% endif %}>Sexism</option>
+            <option value= "sexual harassment" {% if incidentInfo.category=="sexual harassment" %} selected="selected"{% endif %}>Sexual Harassment</option>
+            <option value= "other" {% if incidentInfo.category == "other" %} selected="selected"{% endif %}>Other</option>
         </select>
     </label> <br>
     
@@ -91,28 +102,87 @@
     <script>
         /* global $ */
         console.log("test");
-        
+       
         $("#description").change(function(){
-            console.log("changed");
-            $("#message").html("hello");
-            
+            updateIncident();
         });
-        console.log("hello2");
-        console.log($(this).closest("#description").val());
-        // console.log($(this).val());
-            
-        // const tt = $(this).closest(".rating_form").find("[name=tt]").val();
-        // const rating = $(this).val();
-            
-        // $.post("url_for(updateIncident)",{"tt": tt, "rating": rating}, updateAvgRating);
-          
+        
+        $("#advocate").change(function(){
+            updateIncident();
+        });
+        
+        $("#inlineRadio1").change(function(){
+            updateIncident();
+        });
+        
+         $("#inlineRadio2").change(function(){
+            updateIncident();
+        });
+        
+         $("#inlineRadio3").change(function(){
+            updateIncident();
+        });
+        
+         $("#inlineRadio4").change(function(){
+            updateIncident();
+        });
+        
+         $("#faculty").change(function(){
+            updateIncident();
+        });
+        
+         $("#location").change(function(){
+            updateIncident();
+        });
+        
+         $("#date").change(function(){
+            updateIncident();
+        });
+        
+         $("#category").change(function(){
+            updateIncident();
+        });
+        
+        function updateIncident(){
+            const reportID = document.getElementById("reportID").getAttribute("value");
+            const anonToReportedYes = document.getElementById('inlineRadio1').getAttribute("checked");
+            const anonToReported = anonToReportedYes == "checked" ? true : false;
+
+            const anonToAllYes = document.getElementById('inlineRadio3').getAttribute("checked");
+            const anonToAll = anonToAllYes == "checked" ? true: false;
+
+            var advocateDropDown = document.getElementById("advocate");
+            var advocate = advocateDropDown.options[advocateDropDown.selectedIndex].value;
+
+            var reportedDropDown = document.getElementById("faculty");
+            var reported = reportedDropDown.options[reportedDropDown.selectedIndex].value;
+
+            const locationValue = document.getElementById('location').value;
+
+            const date = document.getElementById('date').value;
+
+            var categoryDropDown = document.getElementById("category");
+            var category = categoryDropDown.options[categoryDropDown.selectedIndex].value;
+
+            const description = document.getElementById('description').value;
+
+            $.get("{{url_for('updateIncident')}}", {'reportID': reportID, 
+                                                'anonymousToReported': anonToReported,
+                                                'anonymousToAll': anonToAll,
+                                                'advocateID': advocate,
+                                                'reportedID': reported,
+                                                'location': locationValue,
+                                                'date': date,
+                                                'category': category,
+                                                'description': description
+                                                }, showSuccessMessage)
+        }
         
         function showSuccessMessage(obj) {
             if(obj.error) {
                 $("#errors").empty().html('Error: '+obj.err);
             } else {
-                $("#"+obj.tt)
-                    .html(obj.average);
+                $("#message").html("Change Saved Successfully");
             }
         
             
