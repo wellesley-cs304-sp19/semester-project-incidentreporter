@@ -204,8 +204,8 @@ getMetrics helps to refresh the aggregate page
 @app.route('/getMetrics')
 def getMetrics():
     numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory = getAggregateDataMetrics()
-    return {"numIncidentsThisWeek": numIncidentsThisWeek, "incidentByReported": incidentByReported,
-            "incidentByLocation": incidentByLocation, "incidentByCategory": incidentByCategory}
+    return jsonify({"numIncidentsThisWeek": numIncidentsThisWeek, "incidentByReported": incidentByReported,
+            "incidentByLocation": incidentByLocation, "incidentByCategory": incidentByCategory})
 
                             
 '''
