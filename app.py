@@ -197,17 +197,6 @@ def attachment(reportID):
     file = attachment['file']
     return Response(file, mimetype='attachment/'+imghdr.what(None,file))
     
-    
-'''
-getMetrics helps to refresh the aggregate page
-'''            
-@app.route('/getMetrics')
-def getMetrics():
-    numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory = getAggregateDataMetrics()
-    return jsonify({"numIncidentsThisWeek": numIncidentsThisWeek, "incidentByReported": incidentByReported,
-            "incidentByLocation": incidentByLocation, "incidentByCategory": incidentByCategory})
-
-                            
 '''
 aggregate shows the admin the data in helpful aggregated forms
 '''            
