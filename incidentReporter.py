@@ -214,7 +214,10 @@ def getIncidentInfo(conn, id):
                             reportedTab.name as reportedName,
                             incident.description as description,
                             incident.location as location,
-                            incident.category as category
+                            incident.category as category,
+                            incident.reporterID as reporterID,
+                            incident.reportedID as reportedID
+                            
                             
                             from incident 
                         inner join user reporterTab on incident.reporterID=reporterTab.BNUM 

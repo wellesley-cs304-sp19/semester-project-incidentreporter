@@ -97,7 +97,20 @@ def deleteIncident(id):
     userInfo = incidentReporter.getUserInformation(conn, uid)
     incidentReporter.deleteIncident(conn, id)
     return render_template('home.html', userInfo=userInfo, userID=uid)
-    
+
+@app.route('/editDetailPage/<id>')
+def editDetailPage(id):
+    conn = incidentReporter.getConn('c9')
+    uid = session['UID']
+    userInfo = incidentReporter.getUserInformation(conn, uid)
+    facStaff = incidentReporter.getFacStaff(conn)
+    incidentInfo = incidentReporter.getIncidentInfo(conn, id)
+    return render_template('incidentReport.html', 
+                            userID = uid, 
+                            facStaff = facStaff,
+                            userInfo = userInfo,
+                            submit=False,
+                            incidentInfo=incidentInfo)
 
 '''
 incidentReport() houses the main incident report form for students
@@ -114,7 +127,9 @@ def incidentReport():
         return render_template('incidentReport.html', 
                                 userID = uid, 
                                 facStaff = facStaff,
-                                userInfo = userInfo)
+                                userInfo = userInfo,
+                                submit=True,
+                                incidentInfo=None)
     else:
         rID = request.form['faculty']
         aID = request.form['advocate']

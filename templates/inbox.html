@@ -30,6 +30,10 @@
       <th scope="col">Attachments</th>
       {% endif %}
       
+      {% if userInfo.role == "student" %}
+      <th scope="col">Edit</th>
+      {% endif %}
+      
       <th scope="col">Details</th>
     </tr>
   </thead>
@@ -88,6 +92,14 @@
                     <input class="btn btn-outline-dark" type="submit" value="More Details">
                 </form>
             </td>
+            
+            {% if userInfo.role == "student" %}
+                <td>
+                <form action="{{ url_for('editDetailPage', id=incident.reportID) }}">
+                    <input class="btn btn-outline-dark" type="submit" value="Edit Incident">
+                </form>
+            </td>
+            {% endif %} 
             
                         
                     </tr>
