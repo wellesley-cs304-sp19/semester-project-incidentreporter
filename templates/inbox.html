@@ -86,20 +86,20 @@
                 </form>
                 {% endif %}
             </td>
-            
-            <td>
-                <form action="{{ url_for('incidentDetailPage', id=incident.reportID) }}">
-                    <input class="btn btn-outline-dark" type="submit" value="More Details">
-                </form>
-            </td>
-            
-            {% if userInfo.role == "student" %}
+             {% if userInfo.role == "student" %}
                 <td>
                 <form action="{{ url_for('editDetailPage', id=incident.reportID) }}">
                     <input class="btn btn-outline-dark" type="submit" value="Edit Incident">
                 </form>
             </td>
             {% endif %} 
+            <td>
+                <form action="{{ url_for('incidentDetailPage', id=incident.reportID) }}">
+                    <input class="btn btn-outline-dark" type="submit" value="More Details">
+                </form>
+            </td>
+            
+           
             
                         
                     </tr>
