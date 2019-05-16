@@ -31,6 +31,27 @@
                 {{key}}: {{value}}<br>
             {% endfor %}
         </div>
+        
+        <button type="submit" id="refresh">Refresh</button>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script>
+            /* global $ */
+            console.log("test");
+            
+            $("#refresh" ).on("click", function(event) {
+                $.get("http://cs304-karinahlin.c9users.io:8081/getMetrics/", updateMetrics);
+            
+                function updateMetrics(obj) {
+                    if(obj.error) {
+                        $("#errors").empty().html('Error: '+obj.err);
+                    } else {
+                        console.log(obj)
+                    }
+                }
+                
+            });
+    
+        </script>
     </body>
 {% endblock %}
 </html>

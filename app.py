@@ -198,7 +198,16 @@ def attachment(reportID):
     return Response(file, mimetype='attachment/'+imghdr.what(None,file))
     
     
+'''
+getMetrics helps to refresh the aggregate page
+'''            
+@app.route('/getMetrics')
+def getMetrics():
+    numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory = getAggregateDataMetrics()
+    return {"numIncidentsThisWeek": numIncidentsThisWeek, "incidentByReported": incidentByReported,
+            "incidentByLocation": incidentByLocation, "incidentByCategory": incidentByCategory}
 
+                            
 '''
 aggregate shows the admin the data in helpful aggregated forms
 '''            
@@ -207,13 +216,9 @@ def aggregate():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userInfo = incidentReporter.getUserInformation(conn, uid)
-    incidentInfo = incidentReporter.getAllIncidentsAggregate(conn)
-
-    numIncidentsThisWeek = getNumIncidentsThisWeek(incidentInfo)
-    incidentByReported = getIncidentsThisReported(incidentInfo)
-    incidentByLocation = getIncidentByLocation(incidentInfo)
-    incidentByCategory = getIncidentByCategory(incidentInfo)
-
+    
+    numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory = getAggregateDataMetrics()
+    
     return render_template('aggregate.html', 
                             userInfo=userInfo, 
                             userID=uid,
@@ -221,7 +226,20 @@ def aggregate():
                             reportedCounts=incidentByReported,
                             locationCounts=incidentByLocation,
                             categoryCounts=incidentByCategory)
+'''
+getAggregateDataMetrics is a helper function that abstracts the data analysis away from the routes
+''' 
+def getAggregateDataMetrics():
+    conn = incidentReporter.getConn('c9')   
+    incidentInfo = incidentReporter.getAllIncidentsAggregate(conn)
 
+    numIncidentsThisWeek = getNumIncidentsThisWeek(incidentInfo)
+    incidentByReported = getIncidentsThisReported(incidentInfo)
+    incidentByLocation = getIncidentByLocation(incidentInfo)
+    incidentByCategory = getIncidentByCategory(incidentInfo)
+    
+    return numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory
+    
 def getNumIncidentsThisWeek(incidentInfo):
     result = 0
     for incident in incidentInfo:

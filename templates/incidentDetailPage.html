@@ -40,6 +40,7 @@
         
         </div>
         
+        {% if userInfo.isStudent %}
         <div id="delete" class="row justify-content-center">
         <div class="form-group">
         <form action="{{ url_for('deleteIncident', id=incident.reportID) }}">
@@ -47,6 +48,7 @@
         </form>
         </div>
         </div>
+        {% endif %}
         
     </body>
 {% endblock %}
