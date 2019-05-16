@@ -204,7 +204,7 @@ This function gets one incident based on reportID
 '''
 def getIncidentInfo(conn, id):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select reportID as reportID,
+    curs.execute('''select incident.reportID as reportID,
                             dateOfIncident as dateOfIncident,
                             anonymousToReported as anonymousToReported,
                             anonymousToAll as anonymousToAll,
@@ -215,14 +215,16 @@ def getIncidentInfo(conn, id):
                             incident.location as location,
                             incident.category as category,
                             incident.reporterID as reporterID,
-                            incident.reportedID as reportedID
+                            incident.reportedID as reportedID,
+                            attachment.file as file
                             
                             
                             from incident 
                         inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
                         inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
                         inner join user reportedTab on incident.reportedID=reportedTab.BNUM
-                        where reportID = %s
+                        left join uploadblob attachment on incident.reportID=attachment.reportID
+                        where incident.reportID = %s
                         ''', [id])
     return curs.fetchone()
 

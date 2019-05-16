@@ -5,6 +5,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<h6 id="message">not yet saved</h6>
 
 <h2 id="form-title">Report an Incident</h2>
 <div class="row justify-content-center">
@@ -12,6 +13,7 @@
     
     <h4 class="form-headings">Reporter Information</h4>
     <div class="form-group">
+
     
 <p id="anon1"> Do you want to remain anonymous to the person you are reporting?</p>
 <div class="form-check form-check-inline">
@@ -37,16 +39,12 @@
     <select name="advocate" id="advocate">
             <option value="">
     {% for fac in facStaff %}
-            <option value= "{{fac.BNUM}}">{{fac.name}}</option>"
+            <option value="{{fac.BNUM}}" {% if incidentInfo.advocateID == fac.BNUM %} selected="selected"{% endif %}>{{fac.name}}</option>"
     {% endfor %}
             </select>
     </label> <br>
     
-    
-    
-    
     <h4 class="form-headings"> Incident Information </h4>
-    
     
     <label for="faculty"> Who are you reporting?
     <select name="faculty" id="faculty">
@@ -58,11 +56,11 @@
     </label> <br>
     
     <label for="location"> Location of Incident:
-        <input id="location" type="text" name="location" size="30" autofocus>
+        <input id="location" type="text" name="location" size="30" value = "{{incidentInfo.location}}" autofocus>
     </label> <br>
     
     <label for="date"> Date of Incident: 
-        <input type="date" id="date" name="date">
+        <input type="date" id="date" value = "{{incidentInfo.dateOfIncident}}" name="date">
     </label> <br>
     
     <label for="category"> Type of Incident: 
@@ -76,17 +74,52 @@
         </select>
     </label> <br>
     
-    <label for="description"> Description of the incident:
-        <textarea name="description" rows="10" cols="30"> </textarea>
+    <label  for="description"> Description of the incident:
+        <textarea name="description" id="description" rows="10" cols="30" > {{incidentInfo.description}}</textarea>
     </label>
     
-    <p><label for="file">Upload a file: <input type="file" name="file"></label></p>
-
+    {% if incidentInfo.submit == True %}
+        <p><label for="file">Upload a file: <input type="file" name="file" ></label></p>
     
-    <p id="enter"> <input class="btn btn-outline-success" type='submit' value='Submit'> </p>
+        <p id="enter"> <input class="btn btn-outline-success" type='submit' value='Submit'> </p>
+    {% endif %}
     
 </form>
 </div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        /* global $ */
+        console.log("test");
+        
+        $("#description").change(function(){
+            console.log("changed");
+            $("#message").html("hello");
+            
+        });
+        console.log("hello2");
+        console.log($(this).closest("#description").val());
+        // console.log($(this).val());
+            
+        // const tt = $(this).closest(".rating_form").find("[name=tt]").val();
+        // const rating = $(this).val();
+            
+        // $.post("url_for(updateIncident)",{"tt": tt, "rating": rating}, updateAvgRating);
+          
+        
+        function showSuccessMessage(obj) {
+            if(obj.error) {
+                $("#errors").empty().html('Error: '+obj.err);
+            } else {
+                $("#"+obj.tt)
+                    .html(obj.average);
+            }
+        
+            
+    }
+    
+
+    </script>
     
 
 {% endblock %}
