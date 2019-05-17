@@ -89,44 +89,56 @@
     {% else %} 
     <!--- Navigation bar content varies depending on user type !--->
         
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="nav-item nav-link" href="{{url_for('home')}}">Home</a>
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: rgba(33, 208, 226, 0.5);">
+        
         
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
-            
-            {% if userType == "student" %} 
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+            <a class="nav-item nav-link" href="{{url_for('home')}}">Home</a>
+            </li>
+            {% if userType == "student" %}
+            <li class="nav-item">
                 <a class="nav-item nav-link" href="{{url_for('studentInbox')}}">Incidents You've Reported</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-item nav-link" href="{{url_for('incidentReport')}}">Report an Incident</a>
-
+            </li>
             {% endif %}
     
             {% if userType == "facstaff" %}
-                      <a class="nav-item nav-link" href="{{url_for('facstaffInbox')}}">Incidents Reported Against You</a>
-
-                      <a class="nav-item nav-link" href="{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a>
-
+                <li class="nav-item">
+                <a class="nav-item nav-link" href="{{url_for('facstaffInbox')}}">Incidents Reported Against You</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-item nav-link" href="{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a>
+                </li>
             {% endif %} 
         
             {% if admin %}
+                <li class="nav-item">
                     <a class="nav-item nav-link" href="{{url_for('adminInbox')}}">All Incidents</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-item nav-link" href="{{url_for('aggregate')}}">Aggregate Data Dashboard</a>
+                </li>
             {% endif %}
+        </ul>
+        <span class="navbar-text">
+          Your BNumber is {{ userID }}
+        </span>
         
         <form class="form-inline" id="log-out" action="{{ url_for('logout') }}">
         <input class="btn btn-sm btn-outline-secondary" name="log-out" type="submit" value="Log Out">
         </form>
+        
         </div>
         </div>
     </nav>
     
-        <br>
-        {% if userID %} 
-            <div class="user-info">You are logged in as user number {{ userID }} </div>
-        {% endif %}
 
     {% endif %}
     

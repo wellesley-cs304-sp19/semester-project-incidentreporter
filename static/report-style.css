@@ -91,8 +91,13 @@ a{color:inherit;text-decoration:none}
 
 .login-form .group .input:focus,
 .login-form .group .button:focus{
-    outline:none;
+    outline: none; 
+    border-radius: 25px;  
+    box-shadow: 0px 0px 1px rgba(0,100,255,1),
+              0px 0px 2px rgba(0,100,255,1),
+              0px 0px 3px rgba(0,100,255,1); /* #0064FF */
 }
+
 .login-form .group input[data-type="password"]{
 	text-security:circle;
 	-webkit-text-security:circle;
@@ -175,8 +180,13 @@ a{color:inherit;text-decoration:none}
     padding-right: 150px;
 }
 
-.user-info {
+.navbar-text {
     font-style: italic;
+    padding-right: 15px;
+}
+
+.nav-item {
+    color: black; 
 }
 
 #home-title, #tag-line {
@@ -191,22 +201,7 @@ a{color:inherit;text-decoration:none}
 }
 
 
-.login-box {
-    padding: 25px;
-    
-}
 
-.form-login {
-    background-color: #AEDDEE;
-    padding-top: 10px;
-    padding-bottom: 20px;
-    padding-left: 20px;
-    padding-right: 20px;
-    border-radius: 15px;
-    border-color:#d2d2d2;
-    border-width: 5px;
-    box-shadow:0 1px 0 #cfcfcf;
-}
 
 h4 { 
  border:0 solid #fff; 

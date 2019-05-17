@@ -62,7 +62,6 @@ def join():
         curs.execute('select last_insert_id()')
         row = curs.fetchone()
         uid = row[0]
-        flash('FYI, you were issued BNUM {}'.format(uid))
         session['name'] = name
         session['email'] = email
         session['UID'] = uid
