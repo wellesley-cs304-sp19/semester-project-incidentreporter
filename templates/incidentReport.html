@@ -143,7 +143,7 @@
             updateIncident();
         });
         
-        function updateIncident(){
+        function updateIncident() {
             const reportID = document.getElementById("reportID").getAttribute("value");
             const anonToReportedYes = document.getElementById('inlineRadio1').getAttribute("checked");
             const anonToReported = anonToReportedYes == "checked" ? true : false;
@@ -165,16 +165,19 @@
             var category = categoryDropDown.options[categoryDropDown.selectedIndex].value;
 
             const description = document.getElementById('description').value;
+            
+            console.log(reportID);
+            console.log(description);
 
-            $.get("{{url_for('updateIncident')}}", {'reportID': reportID, 
-                                                'anonymousToReported': anonToReported,
-                                                'anonymousToAll': anonToAll,
-                                                'advocateID': advocate,
-                                                'reportedID': reported,
-                                                'location': locationValue,
-                                                'date': date,
-                                                'category': category,
-                                                'description': description
+            $.get("{{url_for('updateIncident')}}", {"reportID": reportID, 
+                                                "anonymousToReported": anonToReported,
+                                                "anonymousToAll": anonToAll,
+                                                "advocateID": advocate,
+                                                "reportedID": reported,
+                                                "location": locationValue,
+                                                "date": date,
+                                                "category": category,
+                                                "description": description
                                                 }, showSuccessMessage)
         }
         
