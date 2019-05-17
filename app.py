@@ -191,6 +191,8 @@ def incidentReport():
     reportLock.acquire()
     conn = incidentReporter.getConn('c9')
     uid = session['UID']
+    userType = session.get('role')
+    admin = session.get('admin')
     if request.method == 'GET':
         facStaff = incidentReporter.getFacStaff(conn)
         reportLock.release()
@@ -213,7 +215,7 @@ def incidentReport():
         # If user didn't upload a file, send last param as None
         if 'file' not in request.files:
             incidentReporter.insertIncident(conn, info, uid, rID, aID, None)
-            return redirect(url_for('studentInbox'))
+            return redirect(url_for('studentInbox', userType=userType, admin=admin))
         else: 
             # get uploaded file 
             f = request.files['file']
@@ -223,7 +225,7 @@ def incidentReport():
             upload = f.read()
             incidentReporter.insertIncident(conn, info, uid, rID, aID, upload)
             reportLock.release()
-            return redirect(url_for('studentInbox'))
+            return redirect(url_for('studentInbox', userType=userType, admin=admin))
 
 '''
 studentInbox() displays all incidents reported by student
@@ -232,8 +234,10 @@ studentInbox() displays all incidents reported by student
 def studentInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
+    userType = session['role']
+    isAdmin = session['admin']
     incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
-    return render_template('inbox.html', userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, isAdmin=isAdmin, userID=uid, incidentsList=incidentsList)
     
 '''
 updateIncident() is used to update the incident

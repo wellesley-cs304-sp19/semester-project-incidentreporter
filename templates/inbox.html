@@ -10,12 +10,12 @@
       <th scope="col">Report ID</th>
       <th scope="col">Incident Date</th>
       
-      {% if session.get('role') == "facstaff" or session.get('admin') %}
+      {% if userType == "facstaff" or isAdmin %}
                     <!-- Only for admin and facstaff --> 
                     <th>Reporter</th> <!-- Anonymize if necessary -->
                     {% endif %}
        
-       {% if session.get('role') == "student" or session.get('admin') %}
+       {% if userType == "student" or isAdmin %}
                     <!-- Only for student and admin -->
                     <th>Reported</th> <!-- Will be ID, maybe we can do an inner join to get the name of this person later on -->
                     {% endif %}
@@ -23,11 +23,11 @@
       <th scope="col">Advocate</th>
       <th scope="col">Description</th>
       
-      {% if session.get('role') == "student" or session.get('admin') %}
+      {% if userType == "student" or isAdmin %}
       <th scope="col">Attachments</th>
       {% endif %}
       
-      {% if session.get('role') == "student" %}
+      {% if userType == "student" %}
       <th scope="col">Edit</th>
       {% endif %}
       
@@ -44,8 +44,8 @@
                         
     <!-- Reporter name (for facstaff and admin) -->
 
-    {% if session.get('role') == "facstaff" %}
-        {% if not session.get('admin') %}
+    {% if userType == "facstaff" %}
+        {% if not isAdmin %}
             {% if incident.anonymousToReported == 1 %}
                 <td>Anonymous</td>
             {% else %}
@@ -62,11 +62,11 @@
     {% endif %}     
     
             <!-- Reported name (for student or admin) -->
-            {% if session.get('role') == "student" %}
+            {% if userType == "student" %}
             <td>{{incident.reportedName}}</td> 
             {% endif %} 
             
-            {% if session.get('admin') %}
+            {% if isAdmin %}
             <td>{{incident.reportedName}}</td> 
             {% endif %}
             
@@ -83,7 +83,7 @@
                 </form>
                 {% endif %}
             </td>
-             {% if session.get('role') == "student" %}
+             {% if userType == "student" %}
                 <td>
                 <form action="{{ url_for('editDetailPage', id=incident.reportID) }}">
                     <input class="btn btn-outline-dark" type="submit" value="Edit Incident">
