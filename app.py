@@ -66,7 +66,6 @@ def join():
         session['name'] = name
         session['email'] = email
         session['UID'] = uid
-        print(uid)
         session['logged_in'] = True
         session['role'] = userType
         session['admin'] = False
@@ -323,7 +322,6 @@ def adminInbox():
     uid = session['UID']
     userType = session['role']
     admin = session['admin']
-    print(userType)
     incidentsList = incidentReporter.getAllIncidentsInbox(conn)
     return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
 
