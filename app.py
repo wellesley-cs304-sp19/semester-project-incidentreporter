@@ -191,13 +191,14 @@ def incidentReport():
     reportLock.acquire()
     conn = incidentReporter.getConn('c9')
     uid = session['UID']
-    userType = session.get('role')
+    userType = session['role']
     admin = session.get('admin')
     if request.method == 'GET':
         facStaff = incidentReporter.getFacStaff(conn)
         reportLock.release()
         return render_template('incidentReport.html', 
                                 userID = uid, 
+                                userType=userType,
                                 facStaff = facStaff,
                                 submit=True,
                                 incidentInfo=None)
@@ -280,8 +281,9 @@ facstaffInbox() displays all incidents reports in which the facstaff is reported
 def facstaffInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
+    userType = session['role']
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
-    return render_template('inbox.html', userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, userID=uid, incidentsList=incidentsList)
 
 '''
 advocateInbox() displays all incidents reports in which 
@@ -291,8 +293,9 @@ the facstaff named an advocate
 def advocateInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
+    userType = session['role']
     incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
-    return render_template('inbox.html', userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, userID=uid, incidentsList=incidentsList)
     
 '''
 adminInbox() displays all reported incidents (for admin)
@@ -301,8 +304,9 @@ adminInbox() displays all reported incidents (for admin)
 def adminInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
+    userType = session['role']
     incidentsList = incidentReporter.getAllIncidentsInbox(conn)
-    return render_template('inbox.html', userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, userID=uid, incidentsList=incidentsList)
 
 '''
 '''
