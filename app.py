@@ -198,6 +198,7 @@ def incidentReport():
         reportLock.release()
         return render_template('incidentReport.html', 
                                 userID = uid, 
+                                admin=admin,
                                 userType=userType,
                                 facStaff = facStaff,
                                 submit=True,
@@ -282,8 +283,9 @@ def facstaffInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userType = session['role']
+    admin = session['admin']
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
-    return render_template('inbox.html', userType=userType, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
 
 '''
 advocateInbox() displays all incidents reports in which 
@@ -294,8 +296,9 @@ def advocateInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userType = session['role']
+    admin = session['admin']
     incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
-    return render_template('inbox.html', userType=userType, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
     
 '''
 adminInbox() displays all reported incidents (for admin)
@@ -305,8 +308,10 @@ def adminInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userType = session['role']
+    admin = session['admin']
+    print(userType)
     incidentsList = incidentReporter.getAllIncidentsInbox(conn)
-    return render_template('inbox.html', userType=userType, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
 
 '''
 '''
@@ -324,11 +329,15 @@ aggregate shows the admin the data in helpful aggregated forms
 def aggregate():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
-    
+    userType = session['role']
+    admin = session['admin']
+    print(admin)
     numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory = getAggregateDataMetrics()
     
     return render_template('aggregate.html',
                             userID=uid,
+                            admin=admin,
+                            userType=userType,
                             numWeek=numIncidentsThisWeek,
                             reportedCounts=incidentByReported,
                             locationCounts=incidentByLocation,
