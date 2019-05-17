@@ -10,7 +10,7 @@ use c9;
 
 delete from user;
 
-insert into user (BNUM, name, email, isAdmin, role) values (00000001, "Student 1", "student1@wellesley.edu", false, "student");
+insert into user (name, email, isAdmin, role) values ("Student 1", "student1@wellesley.edu", false, "student");
 insert into user (BNUM, name, email, isAdmin, role) values (00000002, "Student 2", "student2@wellesley.edu", false, "student");
 insert into user (BNUM, name, email, isAdmin, role) values (00000003, "Student 3", "student3@wellesley.edu", false, "student");
 insert into user (BNUM, name, email, isAdmin, role) values (00000004, "Student 4", "student4@wellesley.edu", false, "student");

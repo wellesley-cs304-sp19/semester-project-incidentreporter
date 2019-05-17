@@ -17,11 +17,32 @@
     {% if userID == None %}
     
     <form id="joinform" action="{{url_for('join')}}" method="post">
+        
     <h2>Join</h2>
-    <p><label for=name><input id="name" name="name" required> Name </label></p>
-    <p><label for="email-j"><input id="email-j" name="email-j" required type="email"> Email</label></p>
-    <p><label for="password1"><input type="password" id="password1" name="password1" required> Password </label></p>
-    <p><label for=password2><input type="password" id="password2" name="password2" required> Password again </label></p>
+    
+  
+    <div class="row justify-content-start">
+    <p><label for="name" class="col-auto">Name: </label>
+    <div class="col-auto">
+    <input class="form-control" id="name" name="name" required></p>
+    </div>
+    
+    <p><label for="email-j" class="col-auto">Email: </label>
+    <div class="col-auto">
+    <input class="form-control" id="email-j" name="email-j" required type="email"></p>
+    </div>
+    
+    <div class="w-100"></div>
+    <p><label for="password1" class="col-auto">Password: </label>
+    <div class="col-auto">
+    <input class="form-control" type="password" id="password1" name="password1" required></p>
+    </div>
+    
+    <p><label for=password2 class="col-auto">Password again: </label>
+    <div class="col-auto">
+    <input class="form-control" type="password" id="password2" name="password2" required></p>
+    </div>
+    </div>
     
     <p>Type of Account:</p>
     <div class="form-check form-check-inline">
@@ -34,6 +55,7 @@
     </div>
     
     <p><button type="submit">Submit</button></p>
+    
     </form>
     
     <form id="loginform" action="{{url_for('login')}}" method="post">
