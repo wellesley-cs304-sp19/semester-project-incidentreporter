@@ -3,13 +3,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-{% if incidentInfo.submit == True %}
-{% else %} 
+{% if submit == true %} TEST {% endif %}
+{% if submit is sameas false %}
     <h6 id="message">not yet saved</h6>
 {% endif %}
 
-{% if incidentInfo.submit == True %}
+{% if submit is sameas true %}
     <h2 id="form-title">Report an Incident</h2>
 {% else %}
     <h2 id="form-title">Edit an Incident</h2>
@@ -102,42 +101,52 @@
         console.log("test");
        
         $("#description").change(function(){
+            $("#message").html("Updating changes...");
             updateIncident();
         });
         
         $("#advocate").change(function(){
+            $("#message").html("Updating changes...");
             updateIncident();
         });
         
         $("#inlineRadio1").change(function(){
+            $("#message").html("Updating changes...");
             updateIncident();
         });
         
          $("#inlineRadio2").change(function(){
+             $("#message").html("Updating changes...");
             updateIncident();
         });
         
          $("#inlineRadio3").change(function(){
+             $("#message").html("Updating changes...");
             updateIncident();
         });
         
          $("#inlineRadio4").change(function(){
+             $("#message").html("Updating changes...");
             updateIncident();
         });
         
          $("#faculty").change(function(){
+             $("#message").html("Updating changes...");
             updateIncident();
         });
         
          $("#location").change(function(){
+             $("#message").html("Updating changes...");
             updateIncident();
         });
         
          $("#date").change(function(){
+             $("#message").html("Updating changes...");
             updateIncident();
         });
         
          $("#category").change(function(){
+             $("#message").html("Updating changes...");
             updateIncident();
         });
         
