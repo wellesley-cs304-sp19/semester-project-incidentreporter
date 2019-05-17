@@ -230,15 +230,18 @@ def updateIncident():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     
-    reportID = request.form.get('reportID')
-    anonymousToReported = request.form.get('anonymousToReported')
-    anonymousToAll = request.form.get('anonymousToAll')
-    advocateID = request.form.get('advocateID')
-    reportedID = request.form.get('reportedID')
-    location = request.form.get('location')
-    date = request.form.get('date')
-    category = request.form.get('category')
-    description = request.form.get('description')
+    reportID = request.args.get('reportID')
+    anonymousToReported = request.args.get('anonymousToReported')
+    anonymousToAll = request.args.get('anonymousToAll')
+    advocateID = request.args.get('advocateID')
+    reportedID = request.args.get('reportedID')
+    location = request.args.get('location')
+    date = request.args.get('date')
+    category = request.args.get('category')
+    description = request.args.get('description')
+    
+    print(reportID)
+    print(description)
     
     success = incidentReporter.updateIncident(conn, reportID, 
                                                     anonymousToReported, 
