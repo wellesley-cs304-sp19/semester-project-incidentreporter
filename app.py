@@ -15,7 +15,6 @@ from threading import Lock
 app = Flask(__name__)
 app.secret_key = 'secretkey123'
 
-
 @app.route('/')
 def home():
     ''' Home route renders home page, navigation bar, and login box, if necessary. 
@@ -120,13 +119,14 @@ def login():
         print('form submission error '+str(err))
         return redirect(url_for('home') )
 
-'''
-logout() route 
-- Pops uid from session
-- Redirects to home page
-'''       
+     
 @app.route('/logout/')
 def logout():
+    '''
+    logout() route 
+    - Pops uid from session
+    - Redirects to home page
+    '''  
     try:
         if 'UID' in session:
             uid = session['UID']
@@ -146,47 +146,58 @@ def logout():
         flash('some kind of error '+str(err))
         return redirect( url_for('home') )
         
-'''
-incidentDetailPage(id) shows one incident in detail based on incident ID
-'''            
 @app.route('/incidentDetailPage/<id>')
 def incidentDetailPage(id):
+    '''
+    incidentDetailPage(id) shows one incident in detail based on incident ID
+    ''' 
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
     return render_template('incidentDetailPage.html', userID=uid, incident=incidentInfo)
     
-'''
-deleteIncident(id) deletes incident report
-- Only original reporter can delete an incident report
-'''        
+      
 @app.route('/deleteIncident/<id>')
 def deleteIncident(id):
+    '''
+    deleteIncident(id) deletes incident report
+    - Only original reporter can delete an incident report
+    '''  
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentReporter.deleteIncident(conn, id)
     return render_template('home.html', userID=uid)
 
+
 @app.route('/editDetailPage/<id>')
 def editDetailPage(id):
+    '''
+    editDetailPage(id) leads to a page where students can edit the incidents they have already created
+    -only students can edit reports
+    -reports will be automatically saved via ajax
+    '''
+    #general set up
     conn = incidentReporter.getConn('c9')
     uid = session['UID']
     facStaff = incidentReporter.getFacStaff(conn)
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
-    print(incidentInfo['category'])
+    
+    #render the same template used to report an incident, but this time
+    #submit is false (we are not submitting an incident) and incident Info has a value
     return render_template('incidentReport.html', 
                             userID = uid, 
                             facStaff = facStaff,
                             submit=False,
                             incidentInfo=incidentInfo)
 
-'''
-incidentReport() houses the main incident report form for students
-- On GET, displays form
-- On POST, submits incident report
-'''    
+  
 @app.route('/incidentReport', methods=['POST', 'GET'])
 def incidentReport():
+    '''
+    incidentReport() houses the main incident report form for students
+    - On GET, displays form
+    - On POST, submits incident report
+    '''  
     reportLock = Lock()
     reportLock.acquire()
     conn = incidentReporter.getConn('c9')
@@ -241,15 +252,18 @@ def studentInbox():
     incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
     return render_template('inbox.html', userType=userType, isAdmin=isAdmin, userID=uid, incidentsList=incidentsList)
     
-'''
-updateIncident() is used to update the incident
-'''    
 @app.route('/updateIncident')
 def updateIncident():
-    print("hellllowoeifweighewioh")
+    '''
+    updateIncident() is called by the ajax call to update the incident
+    -reads all fields in the format
+    -calls a function in the DAO to update the incident table
+    -upon success, returns a success message to the front end
+    ''' 
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     
+    #get all the information from the fields on the front end
     reportID = request.args.get('reportID')
     anonymousToReported = request.args.get('anonymousToReported')
     anonymousToAll = request.args.get('anonymousToAll')
@@ -260,9 +274,7 @@ def updateIncident():
     category = request.args.get('category')
     description = request.args.get('description')
     
-    print(reportID)
-    print(description)
-    
+    #call to DAO 
     success = incidentReporter.updateIncident(conn, reportID, 
                                                     anonymousToReported, 
                                                     anonymousToAll, 
@@ -272,14 +284,15 @@ def updateIncident():
                                                     date,
                                                     category,
                                                     description)
-                                                    
+                               
+    #return success message                                                 
     return jsonify({'success': success})
     
-'''
-facstaffInbox() displays all incidents reports in which the facstaff is reported 
-'''     
 @app.route('/facstaffInbox/')
 def facstaffInbox():
+    '''
+    facstaffInbox() displays all incidents reports in which the facstaff is reported 
+    ''' 
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userType = session['role']
@@ -287,12 +300,12 @@ def facstaffInbox():
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
     return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
 
-'''
-advocateInbox() displays all incidents reports in which 
-the facstaff named an advocate
-'''     
 @app.route('/advocateInbox/')
 def advocateInbox():
+    '''
+    advocateInbox() displays all incidents reports in which 
+    the facstaff named an advocate
+    '''  
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userType = session['role']
@@ -300,11 +313,12 @@ def advocateInbox():
     incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
     return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
     
-'''
-adminInbox() displays all reported incidents (for admin)
-'''     
+     
 @app.route('/adminInbox/')
 def adminInbox():
+    '''
+    adminInbox() displays all reported incidents (for admin)
+    '''
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userType = session['role']
@@ -313,25 +327,28 @@ def adminInbox():
     incidentsList = incidentReporter.getAllIncidentsInbox(conn)
     return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
 
-'''
-'''
 @app.route('/attachment/<reportID>')
 def attachment(reportID):
+    '''
+    attachment(reportID) allows users to attach a file to their incidentDetailPage
+    '''
     conn = incidentReporter.getConn('c9')   
     attachment = incidentReporter.getAttachment(conn, reportID)
     file = attachment['file']
     return Response(file, mimetype='attachment/'+imghdr.what(None,file))
     
-'''
-aggregate shows the admin the data in helpful aggregated forms
-'''            
+           
 @app.route('/aggregate')
 def aggregate():
+    '''
+    aggregate shows the admin the data in helpful aggregated forms
+    ''' 
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userType = session['role']
     admin = session['admin']
-    print(admin)
+    
+    #users helper function to get all metrics to pass to the front end
     numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory = getAggregateDataMetrics()
     
     return render_template('aggregate.html',
@@ -342,13 +359,15 @@ def aggregate():
                             reportedCounts=incidentByReported,
                             locationCounts=incidentByLocation,
                             categoryCounts=incidentByCategory)
-'''
-getAggregateDataMetrics is a helper function that abstracts the data analysis away from the routes
-''' 
+
 def getAggregateDataMetrics():
+    '''
+    getAggregateDataMetrics is a helper function that abstracts the data analysis away from the route
+    ''' 
     conn = incidentReporter.getConn('c9')   
     incidentInfo = incidentReporter.getAllIncidentsAggregate(conn)
 
+    #call helper functions
     numIncidentsThisWeek = getNumIncidentsThisWeek(incidentInfo)
     incidentByReported = getIncidentsThisReported(incidentInfo)
     incidentByLocation = getIncidentByLocation(incidentInfo)
@@ -357,6 +376,9 @@ def getAggregateDataMetrics():
     return numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory
     
 def getNumIncidentsThisWeek(incidentInfo):
+    '''
+    getNumIncidentsThisWeek is a helper function that loops through Incident Info to calculate meta data
+    ''' 
     result = 0
     for incident in incidentInfo:
         if (incident['dateOfIncident'] + datetime.timedelta(days=7) >= datetime.datetime.now().date()):
@@ -364,6 +386,9 @@ def getNumIncidentsThisWeek(incidentInfo):
     return result
 
 def getIncidentsThisReported(incidentInfo):
+    '''
+    getIncidentsThisReported is a helper function that loops through Incident Info to calculate meta data
+    '''
     result = {}
     for incident in incidentInfo:
         reported = incident['reportedName']
@@ -376,6 +401,9 @@ def getIncidentsThisReported(incidentInfo):
     return result
 
 def getIncidentByLocation(incidentInfo):
+    '''
+    getIncidentByLocation is a helper function that loops through Incident Info to calculate meta data
+    '''
     result = {}
     for incident in incidentInfo:
         location = incident['location'].lower().replace(" ", "")
@@ -388,6 +416,9 @@ def getIncidentByLocation(incidentInfo):
     return result
 
 def getIncidentByCategory(incidentInfo):
+    '''
+    getIncidentByCategory is a helper function that loops through Incident Info to calculate meta data
+    '''
     result = {}
     for incident in incidentInfo:
         category = incident['category']
