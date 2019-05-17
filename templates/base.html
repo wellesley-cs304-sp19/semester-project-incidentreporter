@@ -15,55 +15,76 @@
 <body>
     
     {% if userID == None %}
-    
-    <form id="joinform" action="{{url_for('join')}}" method="post">
+    <div class="login-wrap">
+	<div class="login-html">
+		<input id="tab-1" type="radio" name="tab" class="sign-in" checked><label for="tab-1" class="tab">Sign In</label>
+		<input id="tab-2" type="radio" name="tab" class="sign-up"><label for="tab-2" class="tab">Sign Up</label>
+		<div class="login-form">
+			<div class="sign-in-htm">
+			    <form id="loginform" action="{{url_for('login')}}" method="post">
+				<div class="group">
+					<label for="email" class="label">Email: </label>
+					<input id="email" name="email" required type="email" class="input">
+				</div>
+				<div class="group">
+					<label for="password" class="label">Password: </label>
+					<input type="password" name="password" id="password" required class="input"></input>
+				</div>
+				
+				<div class="group">
+					<button name="submit" type="submit" class="button">Submit</button>
+				</div>
+				
+				<div class="hr"></div>
+				</form>
+			</div>
+      
+      <div class="sign-up-htm">
+          <form id="joinform" action="{{url_for('join')}}" method="post">
+                <div class="group">
+                  <p><label for="name" class="label">Name: </label>
+                      <input class="input" id="name" name="name" required></p>
+                </div>
+                
+                <div class="group">
+					<p><label for="email-j" class="label">Email: </label>
+                    <input class="input" id="email-j" name="email-j" required type="email"></p>
+				</div>
+				
+				<div class="group">
+					<p><label for="password1" class="label">Password: </label>
+                    <input class="input" type="password" id="password1" name="password1" required></p>
+				</div>
+				
+				<div class="group">
+					<p><label for=password2 class="label">Repeat Password: </label>
+                    <input class="input" type="password" id="password2" name="password2" required></p>
+                </div>
+
+                <p class="label">Type of Account:</p>
+                    <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="userType" id="fac-staff" value="facstaff">
+                    <label class="form-check-label" for="fac-staff">Faculty/Staff Member</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="userType" id="stud" value="student">
+                    <label class="form-check-label" for="stud">Student</label>
+                    </div>
         
-    <h2>Join</h2>
+				<div class="group">
+					<p><button type="submit" class="button">Submit</button></p>
+				</div>
+				
+				<div class="hr"></div>
+				<div class="foot-lnk">
+					<label for="tab-1">Already Member?</a>
+				</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
     
-  
-    <div class="row justify-content-start">
-    <p><label for="name" class="col-auto">Name: </label>
-    <div class="col-auto">
-    <input class="form-control" id="name" name="name" required></p>
-    </div>
-    
-    <p><label for="email-j" class="col-auto">Email: </label>
-    <div class="col-auto">
-    <input class="form-control" id="email-j" name="email-j" required type="email"></p>
-    </div>
-    
-    <div class="w-100"></div>
-    <p><label for="password1" class="col-auto">Password: </label>
-    <div class="col-auto">
-    <input class="form-control" type="password" id="password1" name="password1" required></p>
-    </div>
-    
-    <p><label for=password2 class="col-auto">Password again: </label>
-    <div class="col-auto">
-    <input class="form-control" type="password" id="password2" name="password2" required></p>
-    </div>
-    </div>
-    
-    <p>Type of Account:</p>
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="userType" id="fac-staff" value="facstaff">
-        <label class="form-check-label" for="fac-staff">Faculty/Staff Member</label>
-    </div>
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="userType" id="stud" value="student">
-        <label class="form-check-label" for="stud">Student</label>
-    </div>
-    
-    <p><button type="submit">Submit</button></p>
-    
-    </form>
-    
-    <form id="loginform" action="{{url_for('login')}}" method="post">
-        <h2>Login</h2>
-        <p><label for="email">Email: <input id="email" name="email" required type="email"></label></p>
-        <p><label for="password">Password: <input type="password" name="password" id="password" required></label></p>
-        <p><button name="submit" type="submit">Submit</button></p>
-    </form>
 
     {% else %} 
     <!--- Navigation bar content varies depending on user type !--->
