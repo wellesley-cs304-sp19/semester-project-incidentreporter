@@ -13,12 +13,12 @@
       <th scope="col">Report ID</th>
       <th scope="col">Incident Date</th>
       
-      {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
+      {% if session.get('role') == "facstaff" or session.get('admin') %}
                     <!-- Only for admin and facstaff --> 
                     <th>Reporter</th> <!-- Anonymize if necessary -->
                     {% endif %}
        
-       {% if userInfo.role == "student" or userInfo.isAdmin %}
+       {% if session.get('role') == "student" or session.get('admin') %}
                     <!-- Only for student and admin -->
                     <th>Reported</th> <!-- Will be ID, maybe we can do an inner join to get the name of this person later on -->
                     {% endif %}
@@ -26,11 +26,11 @@
       <th scope="col">Advocate</th>
       <th scope="col">Description</th>
       
-      {% if userInfo.role == "student" or userInfo.isAdmin %}
+      {% if session.get('role') == "student" or session.get('admin') %}
       <th scope="col">Attachments</th>
       {% endif %}
       
-      {% if userInfo.role == "student" %}
+      {% if session.get('role') == "student" %}
       <th scope="col">Edit</th>
       {% endif %}
       
@@ -47,8 +47,8 @@
                         
     <!-- Reporter name (for facstaff and admin) -->
 
-    {% if userInfo.role == "facstaff" %}
-        {% if not userInfo.isAdmin %}
+    {% if session.get('role') == "facstaff" %}
+        {% if not session.get('admin') %}
             {% if incident.anonymousToReported == 1 %}
                 <td>Anonymous</td>
             {% else %}
@@ -65,11 +65,11 @@
     {% endif %}     
     
             <!-- Reported name (for student or admin) -->
-            {% if userInfo.role == "student" %}
+            {% if session.get('role') == "student" %}
             <td>{{incident.reportedName}}</td> 
             {% endif %} 
             
-            {% if userInfo.isAdmin %}
+            {% if session.get('admin') %}
             <td>{{incident.reportedName}}</td> 
             {% endif %}
             
@@ -86,7 +86,7 @@
                 </form>
                 {% endif %}
             </td>
-             {% if userInfo.role == "student" %}
+             {% if session.get('role') == "student" %}
                 <td>
                 <form action="{{ url_for('editDetailPage', id=incident.reportID) }}">
                     <input class="btn btn-outline-dark" type="submit" value="Edit Incident">

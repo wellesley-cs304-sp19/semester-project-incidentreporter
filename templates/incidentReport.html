@@ -25,22 +25,22 @@
     
 <p id="anon1"> Do you want to remain anonymous to the person you are reporting?</p>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-r" id="inlineRadio1" value="1" {% if 1==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
-    <label class="form-check-label" for="anon-r" >Yes</label>
+    <input class="form-check-input" type="radio" name="anon-r" id="anon-ry" value="1" {% if 1==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
+    <label class="form-check-label" for="anon-ry" >Yes</label>
 </div>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-r" id="inlineRadio2" value="0" {% if 0==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
-    <label class="form-check-label" for="anon-r">No</label>
+    <input class="form-check-input" type="radio" name="anon-r" id="anon-rn" value="0" {% if 0==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
+    <label class="form-check-label" for="anon-rn">No</label>
 </div>
 
 <p id="anon2"> Do you want to remain anonymous to everyone?</p>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-all" id="inlineRadio3" value="1" {% if 1==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
-    <label class="form-check-label" for="anon-r">Yes</label>
+    <input class="form-check-input" type="radio" name="anon-all" id="anon-all-y" value="1" {% if 1==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
+    <label class="form-check-label" for="anon-all-y">Yes</label>
 </div>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-all" id="inlineRadio4" value="0" {% if 0==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
-    <label class="form-check-label" for="anon-r">No</label>
+    <input class="form-check-input" type="radio" name="anon-all" id="anon-all-n" value="0" {% if 0==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
+    <label class="form-check-label" for="anon-all-n">No</label>
 </div> <br>
 
     <label for="advocate"> Advocate Name:
@@ -82,12 +82,12 @@
         </select>
     </label> <br>
     
-    <label  for="description"> Description of the incident:
+    <label for="description"> Description of the incident:
         <textarea name="description" id="description" rows="10" cols="30" > {{incidentInfo.description}}</textarea>
     </label>
     
     {% if incidentInfo.submit == True %}
-        <p><label for="file">Upload a file: <input type="file" name="file" ></label></p>
+        <p><label for="file">Upload a file: <input type="file" id="file" name="file" ></label></p>
     
         <p id="enter"> <input class="btn btn-outline-success" type='submit' value='Submit'> </p>
     {% endif %}
@@ -110,22 +110,22 @@
             updateIncident();
         });
         
-        $("#inlineRadio1").change(function(){
+        $("#anon-ry").change(function(){
             $("#message").html("Updating changes...");
             updateIncident();
         });
         
-         $("#inlineRadio2").change(function(){
+         $("#anon-rn").change(function(){
              $("#message").html("Updating changes...");
             updateIncident();
         });
         
-         $("#inlineRadio3").change(function(){
+         $("#anon-all-y").change(function(){
              $("#message").html("Updating changes...");
             updateIncident();
         });
         
-         $("#inlineRadio4").change(function(){
+         $("#anon-all-n").change(function(){
              $("#message").html("Updating changes...");
             updateIncident();
         });

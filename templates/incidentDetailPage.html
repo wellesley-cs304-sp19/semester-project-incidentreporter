@@ -1,7 +1,5 @@
 <!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
 
-<!DOCTYPE html>
-<html lang='en'>
 
 {% extends "base.html" %}
 
@@ -9,12 +7,12 @@
     <body>
         <div id="detail-box" class="row justify-content-center">
         Incident ID: {{incident.reportID}} <br>
-        {% if userInfo.role == "facstaff" or userInfo.isAdmin %}
+        {% if session.get('role') == "facstaff" or session.get('admin') %}
             <!-- Only for admin and facstaff --> 
             Reporter: <!-- Anonymize if necessary -->
         {% endif %}  
         
-        {% if userInfo.role == "facstaff" %}
+        {% if session.get('role') == "facstaff" %}
             {% if incident.anonymousToReported %}
                 Anonymous
             {% else %}
@@ -22,7 +20,7 @@
             {% endif %}
         {% endif %}
         
-        {% if userInfo.isAdmin %}
+        {% if session.get('admin') %}
             {% if incident.anonymousToAll %}
                 <td>Anonymous</td>
             {% else %}
@@ -40,7 +38,7 @@
         
         </div>
         
-        {% if userInfo.isStudent %}
+        {% if session.get('role') == "student" %}
         <div id="delete" class="row justify-content-center">
         <div class="form-group">
         <form action="{{ url_for('deleteIncident', id=incident.reportID) }}">

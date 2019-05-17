@@ -6,109 +6,109 @@
     <meta charset='utf-8'>
     <meta name=author content="Karina Lin, Julia Klugherz, Katherine Gao">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
-    <title>{{title}}</title>
+    
+    <title>{% block title %} {% endblock %}</title>
 
     {% block headstuff %}{% endblock %}
 </head>
 
 <body>
-
     
-    {% if userInfo == None %}
-
-<!--- Login Box information !--->
-    <div class="login-box">
-        <div class="row">
-            <div class="col-sm">
-                <form method="POST" id="form" action="/setUID/">
-                    <div class="form-login">
-                        <h4>Please Log In</h4>
-                        <input type="text" id="email" name="email" class="form-control input-sm chat-input" placeholder="Email" />
-                        </br>
-                        <input type="text" name="user_id" id="user_id" class="form-control input-sm chat-input" placeholder="B-number" />
-                        </br>
-                        <div class="wrapper">
-                </form>
-                <span class="group-btn">  
-                <button id='loginbutton' type="submit" form="form" value="Submit" class="btn btn-primary btn-md">Submit<i class="fa fa-sign-in"></i></button>
-                </span>
-                </div>
-                </div>
-            </div>
-        </div>
+    {% if userID == None %}
+    
+    <form id="joinform" action="{{url_for('join')}}" method="post">
+    <h2>Join</h2>
+    <p><label for=name><input id="name" name="name" required> Name </label></p>
+    <p><label for="email-j"><input id="email-j" name="email-j" required type="email"> Email</label></p>
+    <p><label for="password1"><input type="password" id="password1" name="password1" required> Password </label></p>
+    <p><label for=password2><input type="password" id="password2" name="password2" required> Password again </label></p>
+    
+    <p>Type of Account:</p>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="userType" id="fac-staff" value="facstaff">
+        <label class="form-check-label" for="fac-staff">Faculty/Staff Member</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="userType" id="stud" value="student">
+        <label class="form-check-label" for="stud">Student</label>
     </div>
     
+    <p><button type="submit">Submit</button></p>
+    </form>
+    
+    <form id="loginform" action="{{url_for('login')}}" method="post">
+        <h2>Login</h2>
+        <p><label for="email">Email: <input id="email" name="email" required type="email"></label></p>
+        <p><label for="password">Password: <input type="password" name="password" id="password" required></label></p>
+        <p><button name="submit" type="submit">Submit</button></p>
+    </form>
+
     {% else %} 
-        
     <!--- Navigation bar content varies depending on user type !--->
         
-<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e3f2fd;">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="nav-item nav-link" href="{{url_for('home')}}">Home</a>
     
-    <a class="nav-item nav-link" href="{{url_for('home')}}">Home</a>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
-  
-  {% if userInfo.role == "student" %} 
-  
-  
-      <a class="nav-item nav-link" href="{{url_for('studentInbox')}}">Incidents You've Reported</a>
-      <a class="nav-item nav-link" href="{{url_for('incidentReport')}}">Report an Incident</a>
-        
-        {% endif %}
+            
+            {% if userType == "student" %} 
+                <a class="nav-item nav-link" href="{{url_for('studentInbox')}}">Incidents You've Reported</a>
+                <a class="nav-item nav-link" href="{{url_for('incidentReport')}}">Report an Incident</a>
+
+            {% endif %}
     
-        {% if userInfo.role == "facstaff" %}
-        <a class="nav-item nav-link" href="{{url_for('facstaffInbox')}}">Incidents Reported Against You</a>
-        <a class="nav-item nav-link" href="{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a>
+            {% if userType == "facstaff" %}
+                      <a class="nav-item nav-link" href="{{url_for('facstaffInbox')}}">Incidents Reported Against You</a>
+
+                      <a class="nav-item nav-link" href="{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a>
+
+            {% endif %} 
         
-        {% endif %} 
-        
-        {% if userInfo.isAdmin %}
-        <a class="nav-item nav-link" href="{{url_for('adminInbox')}}">All Incidents</a>
-        <a class="nav-item nav-link" href="{{url_for('aggregate')}}">Aggregate Data Dashboard</a>
-        {% endif %}
+            {% if admin %}
+                    <a class="nav-item nav-link" href="{{url_for('adminInbox')}}">All Incidents</a>
+                    <a class="nav-item nav-link" href="{{url_for('aggregate')}}">Aggregate Data Dashboard</a>
+            {% endif %}
         
         <form class="form-inline" id="log-out" action="{{ url_for('logout') }}">
-        <input class="btn btn-sm btn-outline-secondary" type="submit" value="Log Out">
+        <input class="btn btn-sm btn-outline-secondary" name="log-out" type="submit" value="Log Out">
         </form>
-    </div>
-  </div>
-</nav>
+        </div>
+        </div>
+    </nav>
+    
         <br>
-        
         {% if userID %} 
             <div class="user-info">You are logged in as user number {{ userID }} </div>
         {% endif %}
 
-    
     {% endif %}
+    
+    
     <p>
-
-        {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %}
-    <p>{{ message }}</p>
-        {% endfor %} 
-        {% endif %} 
+        {% with messages = get_flashed_messages() %} 
+            {% if messages %} 
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %} 
+            {% endif %} 
         {% endwith %}
 
     </p>
-
-    <div class="form-body">
-        {% block content %}
-
-        <h1>{{title}}</h1>
-
-        {% endblock %}
+    
+    <div id="content">
+        {% block content %}{% endblock %}
     </div>
+    
     <footer>
         {% block footer %}
         <br>
-        <br> Created by Karina Lin, Katherine Gao, and Julia Klugherz as a final project for CS304 {% endblock %}
+        <br> Created by Karina Lin, Katherine Gao, and Julia Klugherz as a final project for CS304 
+        {% endblock %}
     </footer>
 
-    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-
 </body>
-
 </html>

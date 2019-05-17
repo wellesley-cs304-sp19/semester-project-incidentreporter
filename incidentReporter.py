@@ -20,7 +20,9 @@ def getConn(db):
     
 '''
 getUserInformation(conn, userID) will get all of the information of the logged 
-in user as it is in the database, using the BNUM (userID)
+in user as it is in the database, using the BNUM (userID) 
+
+*** MIGHT NOT NEED THIS ANYMORE SINCE EVERYTHING IS STORED IN SESSIONS?***
 '''
 def getUserInformation(conn, userID):
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
@@ -29,7 +31,31 @@ def getUserInformation(conn, userID):
         return curs.fetchone()
     except:
         return None
+        
+        
 
+	
+	
+def insertNewUser(conn, hashed, name, email, isAdmin, role):
+    ''' inserts a new user with the given parameters into the database, also
+        returns 
+    
+        Parameters
+        ----------
+        hashed: the hashed version of a user's password, with salt
+        name: user's name
+        email: user's email
+        isAdmin: Boolean value that reflects whether the user is an admin
+        role: user type, either facstaff or student
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    add = ('''insert into user  
+           (hashed, name, email, isAdmin, role)
+            values(%s,%s,%s,%s,%s)''')
+    values = (hashed, name, email, isAdmin, role)
+    curs.execute(add, values)
+    conn.commit()
+    
 '''
 getUserInformationWithEmail(conn, userID) will get all of the information of the logged 
 in user as it is in the database, using the BNUM (userID) AND email

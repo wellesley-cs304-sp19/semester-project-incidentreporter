@@ -8,112 +8,119 @@ To run the project, type in 'python app.py' in the terminal.
 '''
 
 from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify, Response)
-import sys, json, incidentReporter, imghdr, datetime, bcrypt, MySQLdb
+import sys, json, incidentReporter, imghdr, datetime, bcrypt, MySQLdb, os
 from werkzeug import secure_filename
 from threading import Lock
 
 app = Flask(__name__)
 app.secret_key = 'secretkey123'
 
-@app.route('/')
-def index():
-    return render_template('login.html')
-'''
-home() route renders home page and login box, if necessary
-'''
+    
+
 @app.route('/')
 def home():
+    ''' Home route renders home page, navigation bar, and login box, if necessary. 
+    '''
     uid=session.get('UID')
-    if uid:
-        conn = incidentReporter.getConn('c9')
-        userInfo = incidentReporter.getUserInformation(conn, uid)
-        return render_template('home.html',
-                                userID = uid, 
-                                userInfo = userInfo)
-    else:
-        userInfo = None
-        return render_template('home.html', userID=uid, userInfo=userInfo)
-
+    userType = session.get('role')
+    admin = session.get('admin')
+    print(userType)
+    print(admin)
+    return render_template('home.html', userID = uid, userType=userType, admin=admin)
 
         
 @app.route('/join/', methods=["POST"])
 def join():
+    ''' Join route for a user to create an account in our database. 
+        Additionally, performs the following:
+        - checks that passwords entered match each other
+        - stores hashed version of user's password with salt for security purposes 
+        - ensures the entered email doesn't already exist in our database
+        - stores name, email, BNUM, login status, admin status, and user role in session  
+        
+        Users are unable to create an account with admin status in order to 
+        prevent just anyone from gaining administrative rights
+        
+        Finally, redirects to home route.
+        
+        Any potential errors are printed to the console. 
+    '''
     try:
-        email = request.form['email']
-        passwd1 = request.form['password1']
-        passwd2 = request.form['password2']
+        name = request.form.get('name')
+        email = request.form.get('email-j')
+        userType = request.form.get('userType')
+        passwd1 = request.form.get('password1')
+        passwd2 = request.form.get('password2')
         if passwd1 != passwd2:
             flash('passwords do not match')
-            return redirect( url_for('index'))
+            return redirect( url_for('home'))
         hashed = bcrypt.hashpw(passwd1.encode('utf-8'), bcrypt.gensalt())
-        conn = incidentReporter.getConn('c9')
-        curs = conn.cursor(MySQLdb.cursors.DictCursor)
-        curs.execute('SELECT email FROM user WHERE email = %s',
-                     [email])
-        row = curs.fetchone()
-        if row is not None:
-            flash('That email is taken')
-            return redirect( url_for('index') )
-        curs.execute('INSERT into user(email,hashed) VALUES(%s,%s)',
-                     [email, hashed])
         
-        bnum = incidentReporter.getBNUM(conn, email)
-        session['uid'] = bnum
+        conn = incidentReporter.getConn('c9') 
+        curs = conn.cursor()
+        try: 
+            incidentReporter.insertNewUser(conn, hashed, name, email, False, userType)
+        except MySQLdb.IntegrityError as err:
+            flash('That email is already in the system')
+            return redirect(url_for('home'))
+        curs.execute('select last_insert_id()')
+        row = curs.fetchone()
+        uid = row[0]
+        flash('FYI, you were issued BNUM {}'.format(uid))
+        session['name'] = name
+        session['email'] = email
+        session['UID'] = uid
         session['logged_in'] = True
-        return redirect( url_for('user', uid=bnum) )
+        session['role'] = userType
+        session['admin'] = False
+        return redirect( url_for('home', userID=uid, userType=userType, admin=False))
     except Exception as err:
         flash('form submission error '+str(err))
-        return redirect( url_for('index') )
-
-@app.route('/user/<uid>')
-def user(uid):
-    try:
-        # don't trust the URL; it's only there for decoration
-        if 'UID' in session:
-            conn = incidentReporter.getConn('c9')
-            uid = session['UID']
-            userInfo = incidentReporter.getUserInformation(conn, uid)
-            return render_template('home.html',
-                                   userID = uid,
-                                   userInfo = userInfo)
-        else:
-            flash('you are not logged in. Please login or join')
-            return redirect( url_for('index') )
-    except Exception as err:
-        flash('some kind of error '+str(err))
-        return redirect( url_for('index') )
+        return redirect( url_for('home') )
         
-'''
-setUID() is a login route that
-- Checks to make sure that credentials are submitted (not blank)
-- Checks that provided email is a wellesley email
-- Checks that B-number and email match one user
-- Then sets user session and re-renders home page 
-'''       
-@app.route('/setUID/', methods=['POST'])
-def setUID():
-    if request.method == 'POST':
-        uid = request.form.get('user_id')
-        # User attempts to log in without any credentials
-        if uid == '': 
-            return redirect(url_for('home'))
-            
+@app.route('/login/', methods=["POST"])
+def login():
+    ''' Login route for users with existing accounts to log in. 
+        Additionally, performs the following:
+        - checks if entered password matches the one that is associated with the 
+          user's email/info
+        - flashes error if user enters incorrect password or an email that is not
+          yet in the system
+        - stores name, email, BNUM, login status, admin status, and user role in session  
+        
+        Finally, redirects to home page.
+        
+        Any potential errors are printed to the console.
+    '''
+    try:
         email = request.form.get('email')
-        email_site = email.split("@")[1]
-        # User attempts to log in with non-Wellesley email
-        if email_site != 'wellesley.edu':
-            flash('Error: please use Wellesley email credentials.')
-            return redirect(url_for('home'))
-            
-        # Try to log in with email and B-number
-        conn = incidentReporter.getConn('c9')   
-        userInfo = incidentReporter.getUserInformationWithEmail(conn, uid, email)
-        if userInfo == None: 
-            flash('Error: Invalid credentials.')
-            return redirect(url_for('home')) 
-        else: 
-            session['UID'] = uid
-            return render_template('home.html', userID=uid, userInfo=userInfo)
+        passwd = request.form.get('password')
+        conn = incidentReporter.getConn('c9')
+        curs = conn.cursor(MySQLdb.cursors.DictCursor)
+        curs.execute('SELECT BNUM,hashed,name,isAdmin,role FROM user WHERE email = %s',
+                     [email])
+        person = curs.fetchone()
+        if person is None:
+            # Same response as wrong password, so no information about what went wrong
+            flash('login incorrect. Try again or join')
+            return redirect( url_for('home'))
+        hashed = person['hashed']
+        # strings always come out of the database as unicode objects
+        if bcrypt.hashpw(passwd.encode('utf-8'),hashed.encode('utf-8')) == hashed:
+            flash('successfully logged in as '+ email)
+            session['name'] = person['name']
+            session['email'] = email
+            session['UID'] = person['BNUM']
+            session['logged_in'] = True
+            session['admin'] = person['isAdmin']
+            session['role'] = person['role']
+            return redirect( url_for('home'))
+        else:
+            flash('login incorrect. Try again or join')
+            return redirect( url_for('home'))
+    except Exception as err:
+        print('form submission error '+str(err))
+        return redirect(url_for('home') )
 
 '''
 logout() route 
@@ -122,8 +129,24 @@ logout() route
 '''       
 @app.route('/logout/')
 def logout():
-    session.pop('UID', None)
-    return redirect(url_for('home'))
+    try:
+        if 'UID' in session:
+            uid = session['UID']
+            session.pop('name')
+            session.pop('email')
+            session.pop('UID')
+            session.pop('logged_in')
+            session.pop('admin')
+            session.pop('role')
+            
+            flash('You are logged out')
+            return redirect(url_for('home'))
+        else:
+            flash('you are not logged in. Please login or join')
+            return redirect( url_for('home') )
+    except Exception as err:
+        flash('some kind of error '+str(err))
+        return redirect( url_for('home') )
         
 '''
 incidentDetailPage(id) shows one incident in detail based on incident ID
@@ -218,8 +241,7 @@ def studentInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
-    userInfo = incidentReporter.getUserInformation(conn, uid)
-    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userID=uid, incidentsList=incidentsList)
     
 '''
 updateIncident() is used to update the incident
@@ -263,8 +285,7 @@ def facstaffInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
-    userInfo = incidentReporter.getUserInformation(conn, uid)
-    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userID=uid, incidentsList=incidentsList)
 
 '''
 advocateInbox() displays all incidents reports in which 
@@ -275,9 +296,7 @@ def advocateInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
-    # print(incidentsList)
-    userInfo = incidentReporter.getUserInformation(conn, uid)
-    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userID=uid, incidentsList=incidentsList)
     
 '''
 adminInbox() displays all reported incidents (for admin)
@@ -287,8 +306,7 @@ def adminInbox():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentsList = incidentReporter.getAllIncidentsInbox(conn)
-    userInfo = incidentReporter.getUserInformation(conn, uid)
-    return render_template('inbox.html', userInfo=userInfo, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userID=uid, incidentsList=incidentsList)
 
 '''
 '''
