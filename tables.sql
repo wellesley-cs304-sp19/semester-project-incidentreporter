@@ -12,13 +12,17 @@ drop table if exists user;
 drop table if exists uploadblob;
 
 create table user(
-	BNUM		integer primary key,
-	name 	varchar(100),
+	BNUM		integer auto_increment primary key,
+	hashed		char(60),
+	unique(email),
+	index(email),
+	name 		varchar(100),
 	email 		varchar(30),
 	isAdmin 	Boolean,
 	role 		enum ('facstaff', 'student')
 )
 ENGINE = InnoDB;
+
 
 create table incident(
 	reportID 		        integer auto_increment primary key,

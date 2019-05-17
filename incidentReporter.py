@@ -41,13 +41,28 @@ def getUserInformationWithEmail(conn, userID, email):
         return curs.fetchone()
     except:
         return None        
+        
+def getBNUM(conn, email):
+    ''' get the UID/BNUM of the user with the email provided. 
+    
+        Parameters
+        ----------
+        email: a user's email address they use to log in
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    try:
+        curs.execute('''select BNUM from user where email = %s''', [email])
+        return curs.fetchone()
+    except:
+        return None  
 
-''' Gets the UID of the person who is being reported based on the given name 
+
+def getIDFromName(conn, name):
+    ''' Gets the UID of the person who is being reported based on the given name 
     ***will not need this in the alpha version ideally because we will change 
     the incident reporting form so that this form element will be a drop down
-    # menu with options of factulry rather than a free for all text box***
-'''
-def getIDFromName(conn, name): 
+    # menu with options of faculty rather than a free for all text box***
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select BNUM from user where name=%s''', [name])
     return curs.fetchall()
@@ -196,8 +211,8 @@ def getAllReportedStudent(conn, BNUM):
     return curs.fetchall()
     
     
-''' getAllIncidents(conn) gets all reported incidents (for admin view)'''
 def getAllIncidentsInbox(conn):
+    ''' gets all reported incident information from the database for admin view '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select incident.reportID as reportID,
                             dateOfIncident as dateOfIncident,

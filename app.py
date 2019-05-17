@@ -8,14 +8,16 @@ To run the project, type in 'python app.py' in the terminal.
 '''
 
 from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify, Response)
-import sys, json, incidentReporter, imghdr, datetime
+import sys, json, incidentReporter, imghdr, datetime, bcrypt, MySQLdb
 from werkzeug import secure_filename
 from threading import Lock
 
 app = Flask(__name__)
 app.secret_key = 'secretkey123'
 
-
+@app.route('/')
+def index():
+    return render_template('login.html')
 '''
 home() route renders home page and login box, if necessary
 '''
@@ -32,6 +34,55 @@ def home():
         userInfo = None
         return render_template('home.html', userID=uid, userInfo=userInfo)
 
+
+        
+@app.route('/join/', methods=["POST"])
+def join():
+    try:
+        email = request.form['email']
+        passwd1 = request.form['password1']
+        passwd2 = request.form['password2']
+        if passwd1 != passwd2:
+            flash('passwords do not match')
+            return redirect( url_for('index'))
+        hashed = bcrypt.hashpw(passwd1.encode('utf-8'), bcrypt.gensalt())
+        conn = incidentReporter.getConn('c9')
+        curs = conn.cursor(MySQLdb.cursors.DictCursor)
+        curs.execute('SELECT email FROM user WHERE email = %s',
+                     [email])
+        row = curs.fetchone()
+        if row is not None:
+            flash('That email is taken')
+            return redirect( url_for('index') )
+        curs.execute('INSERT into user(email,hashed) VALUES(%s,%s)',
+                     [email, hashed])
+        
+        bnum = incidentReporter.getBNUM(conn, email)
+        session['uid'] = bnum
+        session['logged_in'] = True
+        return redirect( url_for('user', uid=bnum) )
+    except Exception as err:
+        flash('form submission error '+str(err))
+        return redirect( url_for('index') )
+
+@app.route('/user/<uid>')
+def user(uid):
+    try:
+        # don't trust the URL; it's only there for decoration
+        if 'UID' in session:
+            conn = incidentReporter.getConn('c9')
+            uid = session['UID']
+            userInfo = incidentReporter.getUserInformation(conn, uid)
+            return render_template('home.html',
+                                   userID = uid,
+                                   userInfo = userInfo)
+        else:
+            flash('you are not logged in. Please login or join')
+            return redirect( url_for('index') )
+    except Exception as err:
+        flash('some kind of error '+str(err))
+        return redirect( url_for('index') )
+        
 '''
 setUID() is a login route that
 - Checks to make sure that credentials are submitted (not blank)
