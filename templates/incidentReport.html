@@ -152,11 +152,11 @@
         
         function updateIncident() {
             const reportID = document.getElementById("reportID").getAttribute("value");
-            const anonToReportedYes = document.getElementById('inlineRadio1').getAttribute("checked");
-            const anonToReported = anonToReportedYes == "checked" ? true : false;
+            //const anonToReportedYes = document.getElementById('inlineRadio1').getAttribute("checked");
+            const anonToReported = $("input:radio[name=anon-r]:checked").val();
 
-            const anonToAllYes = document.getElementById('inlineRadio3').getAttribute("checked");
-            const anonToAll = anonToAllYes == "checked" ? true: false;
+            //const anonToAllYes = document.getElementById('inlineRadio3').getAttribute("checked");
+            const anonToAll = $("input:radio[name=anon-all]:checked").val();
 
             var advocateDropDown = document.getElementById("advocate");
             var advocate = advocateDropDown.options[advocateDropDown.selectedIndex].value;

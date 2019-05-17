@@ -15,7 +15,6 @@ from threading import Lock
 app = Flask(__name__)
 app.secret_key = 'secretkey123'
 
-    
 
 @app.route('/')
 def home():
@@ -24,8 +23,6 @@ def home():
     uid=session.get('UID')
     userType = session.get('role')
     admin = session.get('admin')
-    print(userType)
-    print(admin)
     return render_template('home.html', userID = uid, userType=userType, admin=admin)
 
         
@@ -70,6 +67,7 @@ def join():
         session['name'] = name
         session['email'] = email
         session['UID'] = uid
+        print(uid)
         session['logged_in'] = True
         session['role'] = userType
         session['admin'] = False
@@ -155,9 +153,8 @@ incidentDetailPage(id) shows one incident in detail based on incident ID
 def incidentDetailPage(id):
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
-    userInfo = incidentReporter.getUserInformation(conn, uid)
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
-    return render_template('incidentDetailPage.html', userInfo=userInfo, userID=uid, incident=incidentInfo)
+    return render_template('incidentDetailPage.html', userID=uid, incident=incidentInfo)
     
 '''
 deleteIncident(id) deletes incident report
@@ -167,22 +164,19 @@ deleteIncident(id) deletes incident report
 def deleteIncident(id):
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
-    userInfo = incidentReporter.getUserInformation(conn, uid)
     incidentReporter.deleteIncident(conn, id)
-    return render_template('home.html', userInfo=userInfo, userID=uid)
+    return render_template('home.html', userID=uid)
 
 @app.route('/editDetailPage/<id>')
 def editDetailPage(id):
     conn = incidentReporter.getConn('c9')
     uid = session['UID']
-    userInfo = incidentReporter.getUserInformation(conn, uid)
     facStaff = incidentReporter.getFacStaff(conn)
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
     print(incidentInfo['category'])
     return render_template('incidentReport.html', 
                             userID = uid, 
                             facStaff = facStaff,
-                            userInfo = userInfo,
                             submit=False,
                             incidentInfo=incidentInfo)
 
@@ -198,13 +192,11 @@ def incidentReport():
     conn = incidentReporter.getConn('c9')
     uid = session['UID']
     if request.method == 'GET':
-        userInfo = incidentReporter.getUserInformation(conn, uid)
         facStaff = incidentReporter.getFacStaff(conn)
         reportLock.release()
         return render_template('incidentReport.html', 
                                 userID = uid, 
                                 facStaff = facStaff,
-                                userInfo = userInfo,
                                 submit=True,
                                 incidentInfo=None)
     else:
@@ -324,12 +316,10 @@ aggregate shows the admin the data in helpful aggregated forms
 def aggregate():
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
-    userInfo = incidentReporter.getUserInformation(conn, uid)
     
     numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory = getAggregateDataMetrics()
     
-    return render_template('aggregate.html', 
-                            userInfo=userInfo, 
+    return render_template('aggregate.html',
                             userID=uid,
                             numWeek=numIncidentsThisWeek,
                             reportedCounts=incidentByReported,

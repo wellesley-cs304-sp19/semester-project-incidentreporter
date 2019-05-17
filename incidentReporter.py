@@ -33,8 +33,6 @@ def getUserInformation(conn, userID):
         return None
         
         
-
-	
 	
 def insertNewUser(conn, hashed, name, email, isAdmin, role):
     ''' inserts a new user with the given parameters into the database, also
