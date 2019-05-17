@@ -5,13 +5,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-{% if incidentInfo.submit == True %}
-{% else %} 
+{% if submit == true %} TEST {% endif %}
+{% if submit is sameas false %}
     <h6 id="message">not yet saved</h6>
 {% endif %}
 
-{% if incidentInfo.submit == True %}
+{% if submit is sameas true %}
     <h2 id="form-title">Report an Incident</h2>
 {% else %}
     <h2 id="form-title">Edit an Incident</h2>
