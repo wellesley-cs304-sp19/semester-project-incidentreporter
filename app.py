@@ -179,12 +179,13 @@ def editDetailPage(id):
     uid = session['UID']
     facStaff = incidentReporter.getFacStaff(conn)
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
-    
+    userType = session['role']
     #render the same template used to report an incident, but this time
     #submit is false (we are not submitting an incident) and incident Info has a value
     return render_template('incidentReport.html', 
                             userID = uid, 
                             facStaff = facStaff,
+                            userType = userType,
                             submit=False,
                             incidentInfo=incidentInfo)
 
