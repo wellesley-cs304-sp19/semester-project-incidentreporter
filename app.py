@@ -150,8 +150,10 @@ def incidentDetailPage(id):
     ''' 
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
+    userType = session['role']
+    admin = session.get('admin')
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
-    return render_template('incidentDetailPage.html', userID=uid, incident=incidentInfo, page_title="detail page")
+    return render_template('incidentDetailPage.html', userID=uid,admin=admin, userType=userType, incident=incidentInfo, page_title="detail page")
     
       
 @app.route('/deleteIncident/<id>')
