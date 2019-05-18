@@ -102,7 +102,6 @@ def login():
         hashed = person['hashed']
         # strings always come out of the database as unicode objects
         if bcrypt.hashpw(passwd.encode('utf-8'),hashed.encode('utf-8')) == hashed:
-            flash('successfully logged in as '+ email)
             session['name'] = person['name']
             session['email'] = email
             session['UID'] = person['BNUM']
