@@ -52,28 +52,31 @@ def getBNUM(conn, email):
     except:
         return None  
 
-
-def getIDFromName(conn, name):
-    ''' Gets the UID of the person who is being reported based on the given name 
-    ***will not need this in the alpha version ideally because we will change 
-    the incident reporting form so that this form element will be a drop down
-    # menu with options of faculty rather than a free for all text box***
-    '''
-    curs = conn.cursor(MySQLdb.cursors.DictCursor)
-    curs.execute('''select BNUM from user where name=%s''', [name])
-    return curs.fetchall()
     
 def getFacStaff(conn):
+    ''' This function executes a query to retrieve the name and ID of all faculty
+        staff users. This function will be used in app.py to auto-populate a 
+        form input.
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select name, BNUM from user where role = "facstaff"''')
     return curs.fetchall()
     
-'''
-insertIncident(conn, form, uid, rID, aID) creates an incident report and 
-adds it to the database
-- Gets the most recent ID and calls insertBlob() with this reportID
-'''    
+  
 def insertIncident(conn, form, uid, rID, aID, attachment):
+    '''
+    This function creates an incident report with the information that is passed
+    in as parameters and adds the report information to the database
+    - Gets the most recent ID and calls uploadFile() with this reportID
+    
+    Parameters
+    ----------
+    form: the incident report form that is being filled out
+    uid: user ID
+    rID: ID of the person being reported
+    aID: ID of advocate
+    attachment: file that is being attached to report
+    '''  
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     add = ("insert into incident " 
            "(reporterID,reportedID,advocateID,location,category,dateOfIncident,anonymousToAll,anonymousToReported,description)"
@@ -99,6 +102,23 @@ def updateIncident(conn, reportID,
                         date,
                         category,
                         description):
+    '''
+    This function allows the reporter to update an incident they have previously
+    submitted.
+    
+    Parameters
+    ----------
+    reportID: the report ID that is being edited
+    anonymousToReported: whether the user wants to remain anonymous to the person
+                         they're reporting
+    anonymousToAll: whether the person wants to remain anonymous to all
+    advocateID: ID of the advocate
+    reportedID: ID of the person who is being reportedID
+    location: location of incident 
+    date: date of incident
+    category: type of incident 
+    description: description of incident
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     
     curs.execute('''UPDATE incident
@@ -122,28 +142,50 @@ def updateIncident(conn, reportID,
     conn.commit()
     return True
     
-'''
-insertBlob(conn, uploadBlob, reportID) is called in insertIncident() after a 
-report is created when a user uploads a file
-'''      
+   
 def uploadFile(conn, attachment, reportID):
+    '''
+    This function is called in insertIncident() after a 
+    report is created when a user uploads a file.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    attachment: the file attachment to the report
+    reportID: report ID
+    '''   
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''insert into uploadblob(reportID, file) values (%s,%s)''', [reportID, attachment])
     conn.commit()
 
-'''
-'''
+
 def getAttachment(conn, reportID):
+    '''
+    This function executes a query to select a file from a report based on a given
+    report ID.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    reportID: report ID
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select file from uploadblob where reportID = %s''', [reportID])
     return curs.fetchone()
 
 
-'''
-getAllReportedFacstaff(conn, BNUM) Gets all incidents reported about a specific 
-facstaff user by their BNUM, and also the name of the student who reported
-'''
+
 def getAllReportedFacstaff(conn, BNUM):
+    '''
+    This function gets all incidents reported about a specific 
+    facstaff user given their BNUM, and also the name of the student who reported
+    the facstaff member.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    BNUM: faculty staff member user ID
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select reportID as reportID,
                             dateOfIncident as dateOfIncident,
@@ -161,8 +203,17 @@ def getAllReportedFacstaff(conn, BNUM):
                         where reportedID=%s''', [BNUM])
     return curs.fetchall()
     
-# Gets all incidents reported for which a facstaff is an advocate by their BNUM, and also the name of the students who reported
+
 def getAllReportedAdvocate(conn, BNUM):
+    ''' 
+    This function uses a faculty/staff's BNUM to get all incidents for which 
+    they are an advocate, and also the name of the students who reported.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    BNUM: a faculty/staff's BNUM
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select reportID as reportID,
                                 dateOfIncident as dateOfIncident,
@@ -180,13 +231,18 @@ def getAllReportedAdvocate(conn, BNUM):
                             where advocateID=%s''', [BNUM])    
     return curs.fetchall()
 
-'''
-getAllReportedStudent(conn, BNUM) gets all incidents reported by a specific 
-student using their BNUM, and also the names of facstaff who were implicated
-in the report
-***Do we need another inner join to get the advocate's name?***
-'''
+
 def getAllReportedStudent(conn, BNUM):
+    '''
+    This function gets all incidents reported by a specific 
+    student using their BNUM, and also the names of facstaff who were implicated
+    in the report.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    BNUM: a student's BNUM
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select incident.reportID as reportID,
                             dateOfIncident as dateOfIncident,
@@ -208,7 +264,13 @@ def getAllReportedStudent(conn, BNUM):
     
     
 def getAllIncidentsInbox(conn):
-    ''' gets all reported incident information from the database for admin view '''
+    ''' 
+    This function gets all reported incident information from the database 
+    for admin view 
+    Parameters
+    ----------
+    conn: databse connection
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select incident.reportID as reportID,
                             dateOfIncident as dateOfIncident,
@@ -228,8 +290,14 @@ def getAllIncidentsInbox(conn):
                         ''')
     return curs.fetchall()
 
-''' getAllIncidents(conn) gets all reported incidents for admins to view as aggregate data'''
+
 def getAllIncidentsAggregate(conn):
+    ''' 
+    This function gets all reported incidents for admins to view as aggregate data
+    Parameters
+    ----------
+    conn: databse connection
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select dateOfIncident as dateOfIncident,
                             reportedTab.name as reportedName,
@@ -243,10 +311,15 @@ def getAllIncidentsAggregate(conn):
                         ''')
     return curs.fetchall()
 
-'''
-This function gets one incident based on reportID
-'''
+
 def getIncidentInfo(conn, id):
+    '''
+    This function gets one incident based on a given reportID
+    Parameters
+    ----------
+    conn: databse connection
+    id: report ID
+    '''
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''select incident.reportID as reportID,
                             dateOfIncident as dateOfIncident,
@@ -273,11 +346,16 @@ def getIncidentInfo(conn, id):
                         ''', [id])
     return curs.fetchone()
 
-'''
-This function deletes one incident based on reportID
-'''
+
 def deleteIncident(conn, id):
-    print(id)
+    '''
+    This function deletes one incident based on the given reportID
+    Parameters
+    ----------
+    conn: databse connection
+    id: report ID
+    '''
+    
     curs = conn.cursor(MySQLdb.cursors.DictCursor)
     curs.execute('''delete from incident where reportID = %s''', [id])
     conn.commit()
