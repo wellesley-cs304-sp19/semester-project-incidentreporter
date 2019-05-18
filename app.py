@@ -22,7 +22,7 @@ def home():
     uid=session.get('UID')
     userType = session.get('role')
     admin = session.get('admin')
-    return render_template('home.html', userID = uid, userType=userType, admin=admin)
+    return render_template('home.html', userID = uid, userType=userType, admin=admin, page_title="home")
 
         
 @app.route('/join/', methods=["POST"])
@@ -152,7 +152,7 @@ def incidentDetailPage(id):
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
-    return render_template('incidentDetailPage.html', userID=uid, incident=incidentInfo)
+    return render_template('incidentDetailPage.html', userID=uid, incident=incidentInfo, page_title="detail page")
     
       
 @app.route('/deleteIncident/<id>')
@@ -164,7 +164,7 @@ def deleteIncident(id):
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     incidentReporter.deleteIncident(conn, id)
-    return render_template('home.html', userID=uid)
+    return render_template('home.html', userID=uid, page_title="home")
 
 
 @app.route('/editDetailPage/<id>')
@@ -211,7 +211,8 @@ def incidentReport():
                                 userType=userType,
                                 facStaff = facStaff,
                                 submit=True,
-                                incidentInfo=None)
+                                incidentInfo=None,
+                                page_title="incident report")
     else:
         rID = request.form['faculty']
         aID = request.form['advocate']
@@ -226,7 +227,7 @@ def incidentReport():
         # If user didn't upload a file, send last param as None
         if 'file' not in request.files:
             incidentReporter.insertIncident(conn, info, uid, rID, aID, None)
-            return redirect(url_for('studentInbox', userType=userType, admin=admin))
+            return redirect(url_for('studentInbox', userType=userType, admin=admin, page_title="student inbox"))
         else: 
             # get uploaded file 
             f = request.files['file']
@@ -236,7 +237,7 @@ def incidentReport():
             upload = f.read()
             incidentReporter.insertIncident(conn, info, uid, rID, aID, upload)
             reportLock.release()
-            return redirect(url_for('studentInbox', userType=userType, admin=admin))
+            return redirect(url_for('studentInbox', userType=userType, admin=admin, page_title="student inbox"))
 
 '''
 studentInbox() displays all incidents reported by student
@@ -248,7 +249,9 @@ def studentInbox():
     userType = session['role']
     isAdmin = session['admin']
     incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
-    return render_template('inbox.html', userType=userType, isAdmin=isAdmin, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, 
+                            isAdmin=isAdmin, userID=uid, 
+                            incidentsList=incidentsList, page_title="student inbox")
     
 @app.route('/updateIncident')
 def updateIncident():
@@ -296,7 +299,8 @@ def facstaffInbox():
     userType = session['role']
     admin = session['admin']
     incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
-    return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, admin=admin, 
+                            userID=uid, incidentsList=incidentsList, page_title="fac staff inbox")
 
 @app.route('/advocateInbox/')
 def advocateInbox():
@@ -309,7 +313,8 @@ def advocateInbox():
     userType = session['role']
     admin = session['admin']
     incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
-    return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, admin=admin, 
+                            userID=uid, incidentsList=incidentsList, page_title="advocate inbox")
     
      
 @app.route('/adminInbox/')
@@ -322,7 +327,8 @@ def adminInbox():
     userType = session['role']
     admin = session['admin']
     incidentsList = incidentReporter.getAllIncidentsInbox(conn)
-    return render_template('inbox.html', userType=userType, admin=admin, userID=uid, incidentsList=incidentsList)
+    return render_template('inbox.html', userType=userType, admin=admin, 
+                            userID=uid, incidentsList=incidentsList, page_title="admin inbox")
 
 @app.route('/attachment/<reportID>')
 def attachment(reportID):
@@ -355,7 +361,8 @@ def aggregate():
                             numWeek=numIncidentsThisWeek,
                             reportedCounts=incidentByReported,
                             locationCounts=incidentByLocation,
-                            categoryCounts=incidentByCategory)
+                            categoryCounts=incidentByCategory,
+                            page_title="aggregate data")
 
 def getAggregateDataMetrics():
     '''

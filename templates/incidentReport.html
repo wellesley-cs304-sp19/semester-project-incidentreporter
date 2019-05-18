@@ -1,5 +1,6 @@
 <!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
 
+
 {% extends "base.html" %}
 
 {% block content %}
@@ -8,39 +9,44 @@
 {% endif %}
 
 {% if submit is sameas true %}
-    <h2 id="form-title">Report an Incident</h2>
+    <h1 id="form-title">Report an Incident</h1>
 {% else %}
-    <h2 id="form-title">Edit an Incident</h2>
+    <h1 id="form-title">Edit an Incident</h1>
 {% endif %}
 
 
 <div class="row justify-content-center">
 <form action="{{url_for('incidentReport')}}" method="post" enctype="multipart/form-data" id="submissionform">
     
-    <h4 class="form-headings">Reporter Information</h4>
+    <h2 class="form-headings">Reporter Information</h2>
     <div class="form-group">
     <h7 hidden id="reportID" value={{incidentInfo.reportID}}> {{incidentInfo.reportID}} </h7>
 
     
-<p id="anon1"> Do you want to remain anonymous to the person you are reporting?</p>
+<fieldset>
+    <legend id="anon1">Do you want to remain anonymous to the person you are reporting?</legend>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-r" id="anon-ry" value="1" {% if 1==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
+    <input class="form-check-input" type="radio" name="anon-r" id="anon-ry" value="1" required {% if 1==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
     <label class="form-check-label" for="anon-ry" >Yes</label>
 </div>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-r" id="anon-rn" value="0" {% if 0==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
+    <input class="form-check-input" type="radio" name="anon-r" id="anon-rn" value="0" required {% if 0==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
     <label class="form-check-label" for="anon-rn">No</label>
 </div>
+</fieldset>
 
-<p id="anon2"> Do you want to remain anonymous to everyone?</p>
+<fieldset>
+    <legend id="anon2">Do you want to remain anonymous to everyone?</legend>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-all" id="anon-all-y" value="1" {% if 1==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
+    <input class="form-check-input" type="radio" name="anon-all" id="anon-all-y" value="1" required {% if 1==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
     <label class="form-check-label" for="anon-all-y">Yes</label>
 </div>
 <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="anon-all" id="anon-all-n" value="0" {% if 0==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
+    <input class="form-check-input" type="radio" name="anon-all" id="anon-all-n" value="0" required {% if 0==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
     <label class="form-check-label" for="anon-all-n">No</label>
-</div> <br>
+</div> 
+</fieldset>
+<br>
 
     <label for="advocate"> Advocate Name:
     <select name="advocate" id="advocate">
@@ -51,7 +57,7 @@
             </select>
     </label> <br>
     
-    <h4 class="form-headings"> Incident Information </h4>
+    <h2 class="form-headings"> Incident Information </h2>
     <label for="faculty"> Who are you reporting?
    
     <select name="faculty" id="faculty">
@@ -62,16 +68,30 @@
             </select>
     </label> <br>
     
+    <script>
+    
+    /* global $ */
+        var adv = $("#advocate").val();
+        var reported = $("#faculty").val();
+        
+        if (adv == reported) {
+            alert("you cannot name the person you are reporting as an advocate!");
+        }
+    </script>
+    
+    
     <label for="location"> Location of Incident:
-        <input id="location" type="text" name="location" size="30" value = "{{incidentInfo.location}}" autofocus>
+        <input id="location" type="text" name="location" size="30" value = "{{incidentInfo.location}}" required autofocus>
     </label> <br>
     
     <label for="date"> Date of Incident: 
-        <input type="date" id="date" value = "{{incidentInfo.dateOfIncident}}" name="date">
+        <input type="date" id="date" value = "{{incidentInfo.dateOfIncident}}" name="date" required>
     </label> <br>
     
+    
+    
     <label for="category" > Type of Incident: 
-    <select name="category" id="category">
+    <select name="category" id="category" required>
             <option value="">
             <option value= "racism" {% if incidentInfo.category=="racism" %} selected="selected"{% endif %}>Racism</option>
             <option value= "ableism" {% if incidentInfo.category == "ableism" %} selected="selected"{% endif %}>Ableism</option>
@@ -82,7 +102,7 @@
     </label> <br>
     
     <label for="description"> Description of the incident:
-        <textarea name="description" id="description" rows="10" cols="30" > {{incidentInfo.description}}</textarea>
+        <textarea name="description" id="description" rows="10" cols="30" required> {{incidentInfo.description}}</textarea>
     </label>
     
     {% if submit == True %}

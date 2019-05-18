@@ -7,7 +7,7 @@
     <meta name=author content="Karina Lin, Julia Klugherz, Katherine Gao">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     
-    <title>{% block title %} {% endblock %}</title>
+    <title>{{ page_title }}</title>
 
     {% block headstuff %}{% endblock %}
 </head>
@@ -17,8 +17,10 @@
     {% if userID == None %}
     <div class="login-wrap">
 	<div class="login-html">
+	    
 		<input id="tab-1" type="radio" name="tab" class="sign-in" checked><label for="tab-1" class="tab">Sign In</label>
 		<input id="tab-2" type="radio" name="tab" class="sign-up"><label for="tab-2" class="tab">Sign Up</label>
+		
 		<div class="login-form">
 			<div class="sign-in-htm">
 			    <form id="loginform" action="{{url_for('login')}}" method="post">
@@ -61,7 +63,8 @@
                     <input class="input" type="password" id="password2" name="password2" required></p>
                 </div>
 
-                <p class="label">Type of Account:</p>
+                    <fieldset> 
+                    <legend class="label"> Type of Account: </legend>
                     <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="userType" id="fac-staff" value="facstaff">
                     <label class="form-check-label" for="fac-staff">Faculty/Staff Member</label>
@@ -70,15 +73,13 @@
                     <input class="form-check-input" type="radio" name="userType" id="stud" value="student">
                     <label class="form-check-label" for="stud">Student</label>
                     </div>
-        
+                    </fieldset>
 				<div class="group">
 					<p><button type="submit" class="button">Submit</button></p>
 				</div>
 				
 				<div class="hr"></div>
-				<div class="foot-lnk">
-					<label for="tab-1">Already Member?</a>
-				</div>
+				
 				</form>
 			</div>
 		</div>
