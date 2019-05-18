@@ -122,7 +122,7 @@ def login():
 def logout():
     '''
     logout() route 
-    - Pops uid from session
+    - Pops all user information from session
     - Redirects to home page
     '''  
     try:
@@ -146,8 +146,8 @@ def logout():
         
 @app.route('/incidentDetailPage/<id>')
 def incidentDetailPage(id):
-    '''
-    incidentDetailPage(id) shows one incident in detail based on incident ID
+    '''This function shows takes one parameter, id, the incident ID and 
+       returns all details regarding the incident with the given ID.
     ''' 
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
@@ -157,9 +157,9 @@ def incidentDetailPage(id):
       
 @app.route('/deleteIncident/<id>')
 def deleteIncident(id):
-    '''
-    deleteIncident(id) deletes incident report
-    - Only original reporter can delete an incident report
+    ''' This function takes an ID of an incident report as a parameter and 
+        deletes the incident report associated with the given ID. 
+        - Only the original reporter can delete an incident report
     '''  
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
