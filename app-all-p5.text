@@ -1,0 +1,1882 @@
+'''
+app.py
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+This file contains the flask application in which our project runs.
+To run the project, type in 'python app.py' in the terminal.
+'''
+
+from flask import (Flask, url_for, render_template, request, redirect, flash, session, jsonify, Response)
+import sys, json, incidentReporter, imghdr, datetime, bcrypt, MySQLdb, os
+from werkzeug import secure_filename
+from threading import Lock
+
+app = Flask(__name__)
+app.secret_key = 'secretkey123'
+
+@app.route('/')
+def home():
+    ''' Home route renders home page, navigation bar, and login box, if necessary. 
+    '''
+    uid=session.get('UID')
+    userType = session.get('role')
+    admin = session.get('admin')
+    return render_template('home.html', userID = uid, userType=userType, admin=admin, page_title="home")
+
+        
+@app.route('/join/', methods=["POST"])
+def join():
+    ''' Join route for a user to create an account in our database. 
+        Additionally, performs the following:
+        - checks that passwords entered match each other
+        - stores hashed version of user's password with salt for security purposes 
+        - ensures the entered email doesn't already exist in our database
+        - stores name, email, BNUM, login status, admin status, and user role in session  
+        
+        Users are unable to create an account with admin status in order to 
+        prevent just anyone from gaining administrative rights
+        
+        Finally, redirects to home route.
+        
+        Any potential errors are flashed. 
+    '''
+    try:
+        name = request.form.get('name')
+        email = request.form.get('email-j')
+        userType = request.form.get('userType')
+        passwd1 = request.form.get('password1')
+        passwd2 = request.form.get('password2')
+        if passwd1 != passwd2:
+            flash('passwords do not match')
+            return redirect( url_for('home'))
+        hashed = bcrypt.hashpw(passwd1.encode('utf-8'), bcrypt.gensalt())
+        
+        conn = incidentReporter.getConn('c9') 
+        curs = conn.cursor()
+        try: 
+            incidentReporter.insertNewUser(conn, hashed, name, email, False, userType)
+        except MySQLdb.IntegrityError as err:
+            flash('That email is already in the system')
+            return redirect(url_for('home'))
+        curs.execute('select last_insert_id()')
+        row = curs.fetchone()
+        uid = row[0]
+        session['name'] = name
+        session['email'] = email
+        session['UID'] = uid
+        session['logged_in'] = True
+        session['role'] = userType
+        session['admin'] = False
+        return redirect( url_for('home', userID=uid, userType=userType, admin=False))
+    except Exception as err:
+        flash('form submission error '+str(err))
+        return redirect( url_for('home') )
+        
+@app.route('/login/', methods=["POST"])
+def login():
+    ''' Login route for users with existing accounts to log in. 
+        Additionally, performs the following:
+        - checks if entered password matches the one that is associated with the 
+          user's email/info
+        - flashes error if user enters incorrect password or an email that is not
+          yet in the system
+        - stores name, email, BNUM, login status, admin status, and user role in session  
+        
+        Finally, redirects to home page.
+        
+        Any potential errors are flashed.
+    '''
+    try:
+        email = request.form.get('email')
+        passwd = request.form.get('password')
+        conn = incidentReporter.getConn('c9')
+        curs = conn.cursor(MySQLdb.cursors.DictCursor)
+        curs.execute('SELECT BNUM,hashed,name,isAdmin,role FROM user WHERE email = %s',
+                     [email])
+        person = curs.fetchone()
+        if person is None:
+            # Same response as wrong password, so no information about what went wrong
+            flash('login incorrect. Try again or join')
+            return redirect( url_for('home'))
+        hashed = person['hashed']
+        # strings always come out of the database as unicode objects
+        if bcrypt.hashpw(passwd.encode('utf-8'),hashed.encode('utf-8')) == hashed:
+            session['name'] = person['name']
+            session['email'] = email
+            session['UID'] = person['BNUM']
+            session['logged_in'] = True
+            session['admin'] = person['isAdmin']
+            session['role'] = person['role']
+            return redirect( url_for('home'))
+        else:
+            flash('login incorrect. Try again or join')
+            return redirect( url_for('home'))
+    except Exception as err:
+        print('form submission error '+str(err))
+        return redirect(url_for('home') )
+
+     
+@app.route('/logout/')
+def logout():
+    '''
+    logout() route 
+    - Pops all user information from session
+    - Redirects to home page
+    '''  
+    try:
+        if 'UID' in session:
+            uid = session['UID']
+            session.pop('name')
+            session.pop('email')
+            session.pop('UID')
+            session.pop('logged_in')
+            session.pop('admin')
+            session.pop('role')
+            
+            flash('You are logged out')
+            return redirect(url_for('home'))
+        else:
+            flash('You are not logged in. Please login or join')
+            return redirect( url_for('home') )
+    except Exception as err:
+        flash('some kind of error '+str(err))
+        return redirect( url_for('home') )
+        
+@app.route('/incidentDetailPage/<id>')
+def incidentDetailPage(id):
+    '''This function shows takes one parameter, id, the incident ID and 
+       renders the page with all details regarding the incident with the given ID.
+    ''' 
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userType = session['role']
+    admin = session.get('admin')
+    incidentInfo = incidentReporter.getIncidentInfo(conn, id)
+    return render_template('incidentDetailPage.html', userID=uid,admin=admin, userType=userType, incident=incidentInfo, page_title="detail page")
+    
+      
+@app.route('/deleteIncident/<id>')
+def deleteIncident(id):
+    ''' This function takes an ID of an incident report as a parameter and 
+        deletes the incident report associated with the given ID. 
+        - Only the original reporter can delete an incident report
+        - Renders home page
+    '''  
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    incidentReporter.deleteIncident(conn, id)
+    return render_template('home.html', userID=uid, page_title="home")
+
+
+@app.route('/editDetailPage/<id>')
+def editDetailPage(id):
+    '''
+    This function takes in one parameter, an incident report ID. This route
+    leads to a page where students can edit the incidents they have already created
+    -only students can edit reports
+    -reports will be automatically saved via ajax
+    '''
+    #general set up
+    conn = incidentReporter.getConn('c9')
+    uid = session['UID']
+    facStaff = incidentReporter.getFacStaff(conn)
+    incidentInfo = incidentReporter.getIncidentInfo(conn, id)
+    userType = session['role']
+    #render the same template used to report an incident, but this time
+    #submit is false (we are not submitting an incident) and incident Info has a value
+    return render_template('incidentReport.html', 
+                            userID = uid, 
+                            facStaff = facStaff,
+                            userType = userType,
+                            submit=False,
+                            incidentInfo=incidentInfo)
+
+  
+@app.route('/incidentReport', methods=['POST', 'GET'])
+def incidentReport():
+    '''
+    incidentReport() houses the main incident report form for students
+    - On GET, displays form
+    - On POST, submits incident report
+    '''  
+    reportLock = Lock()
+    reportLock.acquire()
+    conn = incidentReporter.getConn('c9')
+    uid = session['UID']
+    userType = session['role']
+    admin = session.get('admin')
+    if request.method == 'GET':
+        facStaff = incidentReporter.getFacStaff(conn)
+        reportLock.release()
+        return render_template('incidentReport.html', 
+                                userID = uid, 
+                                admin=admin,
+                                userType=userType,
+                                facStaff = facStaff,
+                                submit=True,
+                                incidentInfo=None,
+                                page_title="incident report")
+    else:
+        rID = request.form['faculty']
+        aID = request.form['advocate']
+        
+        # a person cannot report themselves
+        if uid == rID:
+            flash('Error: you cannot report yourself')
+            return redirect(request.referrer)
+        # update database with information from a valid report
+        info = request.form
+        
+        # If user didn't upload a file, send last param as None
+        if 'file' not in request.files:
+            incidentReporter.insertIncident(conn, info, uid, rID, aID, None)
+            return redirect(url_for('studentInbox', userType=userType, admin=admin, page_title="student inbox"))
+        else: 
+            # get uploaded file 
+            f = request.files['file']
+            mime_type = imghdr.what(f.stream)
+            if mime_type not in ['jpeg','gif','png', 'pdf']:
+                raise Exception('Not a JPEG, GIF, PNG, or PDF: {}'.format(mime_type))
+            upload = f.read()
+            incidentReporter.insertIncident(conn, info, uid, rID, aID, upload)
+            reportLock.release()
+            return redirect(url_for('studentInbox', userType=userType, admin=admin, page_title="student inbox"))
+
+    
+@app.route('/studentInbox/')
+def studentInbox():
+    '''
+    This route renders the student inbox which displays all incidents reported by student
+    '''
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userType = session['role']
+    isAdmin = session['admin']
+    incidentsList = incidentReporter.getAllReportedStudent(conn, uid)
+    return render_template('inbox.html', userType=userType, 
+                            isAdmin=isAdmin, userID=uid, 
+                            incidentsList=incidentsList, page_title="student inbox")
+    
+@app.route('/updateIncident')
+def updateIncident():
+    '''
+    updateIncident() is called by the ajax call to update the incident
+    -reads all fields in the format
+    -calls a function in the DAO to update the incident table
+    -upon success, returns a success message to the front end
+    ''' 
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    
+    #get all the information from the fields on the front end
+    reportID = request.args.get('reportID')
+    anonymousToReported = request.args.get('anonymousToReported')
+    anonymousToAll = request.args.get('anonymousToAll')
+    advocateID = request.args.get('advocateID')
+    reportedID = request.args.get('reportedID')
+    location = request.args.get('location')
+    date = request.args.get('date')
+    category = request.args.get('category')
+    description = request.args.get('description')
+    
+    #call to DAO 
+    success = incidentReporter.updateIncident(conn, reportID, 
+                                                    anonymousToReported, 
+                                                    anonymousToAll, 
+                                                    advocateID,
+                                                    reportedID,
+                                                    location,
+                                                    date,
+                                                    category,
+                                                    description)
+                               
+    #return success message                                                 
+    return jsonify({'success': success})
+    
+@app.route('/facstaffInbox/')
+def facstaffInbox():
+    '''
+    This route renders the faculty/staff inbox which displays all incident reports 
+    in which the facstaff is reported 
+    ''' 
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userType = session['role']
+    admin = session['admin']
+    incidentsList = incidentReporter.getAllReportedFacstaff(conn, uid)
+    return render_template('inbox.html', userType=userType, admin=admin, 
+                            userID=uid, incidentsList=incidentsList, page_title="fac staff inbox")
+
+@app.route('/advocateInbox/')
+def advocateInbox():
+    '''
+    This route renders the advocate inbox which displays all incidents reports in which 
+    the facstaff is named an advocate
+    '''  
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userType = session['role']
+    admin = session['admin']
+    incidentsList = incidentReporter.getAllReportedAdvocate(conn, uid)
+    return render_template('inbox.html', userType=userType, admin=admin, 
+                            userID=uid, incidentsList=incidentsList, page_title="advocate inbox")
+    
+     
+@app.route('/adminInbox/')
+def adminInbox():
+    '''
+    This route renders the admin inbox which displays all reported incidents (for admin)
+    '''
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userType = session['role']
+    admin = session['admin']
+    incidentsList = incidentReporter.getAllIncidentsInbox(conn)
+    return render_template('inbox.html', userType=userType, admin=admin, 
+                            userID=uid, incidentsList=incidentsList, page_title="admin inbox")
+
+@app.route('/attachment/<reportID>')
+def attachment(reportID):
+    '''
+    attachment(reportID) allows users to attach a file to their incidentDetailPage
+    '''
+    conn = incidentReporter.getConn('c9')   
+    attachment = incidentReporter.getAttachment(conn, reportID)
+    file = attachment['file']
+    return Response(file, mimetype='attachment/'+imghdr.what(None,file))
+    
+           
+@app.route('/aggregate')
+def aggregate():
+    '''
+    aggregate shows the admin the data in helpful aggregated forms
+    ''' 
+    conn = incidentReporter.getConn('c9')   
+    uid = session['UID']
+    userType = session['role']
+    admin = session['admin']
+    
+    #users helper function to get all metrics to pass to the front end
+    numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory = getAggregateDataMetrics()
+    
+    return render_template('aggregate.html',
+                            userID=uid,
+                            admin=admin,
+                            userType=userType,
+                            numWeek=numIncidentsThisWeek,
+                            reportedCounts=incidentByReported,
+                            locationCounts=incidentByLocation,
+                            categoryCounts=incidentByCategory,
+                            page_title="aggregate data")
+
+def getAggregateDataMetrics():
+    '''
+    getAggregateDataMetrics is a helper function that abstracts the data analysis away from the route
+    ''' 
+    conn = incidentReporter.getConn('c9')   
+    incidentInfo = incidentReporter.getAllIncidentsAggregate(conn)
+
+    #call helper functions
+    numIncidentsThisWeek = getNumIncidentsThisWeek(incidentInfo)
+    incidentByReported = getIncidentsThisReported(incidentInfo)
+    incidentByLocation = getIncidentByLocation(incidentInfo)
+    incidentByCategory = getIncidentByCategory(incidentInfo)
+    
+    return numIncidentsThisWeek, incidentByReported, incidentByLocation, incidentByCategory
+    
+def getNumIncidentsThisWeek(incidentInfo):
+    '''
+    getNumIncidentsThisWeek is a helper function that loops through Incident Info to calculate meta data
+    ''' 
+    result = 0
+    for incident in incidentInfo:
+        if (incident['dateOfIncident'] + datetime.timedelta(days=7) >= datetime.datetime.now().date()):
+            result += 1
+    return result
+
+def getIncidentsThisReported(incidentInfo):
+    '''
+    getIncidentsThisReported is a helper function that loops through Incident Info to calculate meta data
+    '''
+    result = {}
+    for incident in incidentInfo:
+        reported = incident['reportedName']
+        if reported in result.keys():
+            temp = result[reported]
+            temp += 1
+            result[reported] = temp
+        else:
+            result[reported] = 1
+    return result
+
+def getIncidentByLocation(incidentInfo):
+    '''
+    getIncidentByLocation is a helper function that loops through Incident Info to calculate meta data
+    '''
+    result = {}
+    for incident in incidentInfo:
+        location = incident['location'].lower().replace(" ", "")
+        if location in result.keys():
+            temp = result[location]
+            temp += 1
+            result[location] = temp
+        else:
+            result[location] = 1
+    return result
+
+def getIncidentByCategory(incidentInfo):
+    '''
+    getIncidentByCategory is a helper function that loops through Incident Info to calculate meta data
+    '''
+    result = {}
+    for incident in incidentInfo:
+        category = incident['category']
+        if category in result.keys():
+            temp = result[category]
+            temp += 1
+            result[category] = temp
+        else:
+            result[category] = 1
+    return result
+
+
+if __name__ == '__main__':
+    app.debug = True
+    app.run('0.0.0.0',8081)
+'''
+incidentReporter.py
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+This file contains the SQL queries to our database.
+'''
+
+import sys
+import MySQLdb
+
+ADDED_BY = 1341
+    
+def getConn(db):
+    conn = MySQLdb.connect(host='localhost',
+                           user='ubuntu',
+                           passwd='',
+                           db=db)
+    return conn
+    
+        
+def insertNewUser(conn, hashed, name, email, isAdmin, role):
+    ''' inserts a new user with the given parameters into the database, 
+    
+        Parameters
+        ----------
+        hashed: the hashed version of a user's password, with salt
+        name: user's name
+        email: user's email
+        isAdmin: Boolean value that reflects whether the user is an admin
+        role: user type, either facstaff or student
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    add = ('''insert into user  
+           (hashed, name, email, isAdmin, role)
+            values(%s,%s,%s,%s,%s)''')
+    values = (hashed, name, email, isAdmin, role)
+    curs.execute(add, values)
+    conn.commit()
+        
+def getBNUM(conn, email):
+    ''' get the UID/BNUM of the user with the email provided. 
+    
+        Parameters
+        ----------
+        email: a user's email address they use to log in
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    try:
+        curs.execute('''select BNUM from user where email = %s''', [email])
+        return curs.fetchone()
+    except:
+        return None  
+
+    
+def getFacStaff(conn):
+    ''' This function executes a query to retrieve the name and ID of all faculty
+        staff users. This function will be used in app.py to auto-populate a 
+        form input.
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select name, BNUM from user where role = "facstaff"''')
+    return curs.fetchall()
+    
+  
+def insertIncident(conn, form, uid, rID, aID, attachment):
+    '''
+    This function creates an incident report with the information that is passed
+    in as parameters and adds the report information to the database
+    - Gets the most recent ID and calls uploadFile() with this reportID
+    
+    Parameters
+    ----------
+    form: the incident report form that is being filled out
+    uid: user ID
+    rID: ID of the person being reported
+    aID: ID of advocate
+    attachment: file that is being attached to report
+    '''  
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    add = ("insert into incident " 
+           "(reporterID,reportedID,advocateID,location,category,dateOfIncident,anonymousToAll,anonymousToReported,description)"
+           "values(%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+    values = (uid,rID,aID,
+              form['location'],form['category'],form['date'],
+              form['anon-all'],form['anon-r'],form['description'])
+    curs.execute(add, values)
+    conn.commit()
+    
+    # Only upload a blob if the user inputted a file
+    if attachment is not None:
+        reportID = curs.lastrowid
+        uploadFile(conn, attachment, reportID)
+    
+    
+def updateIncident(conn, reportID, 
+                        anonymousToReported,
+                        anonymousToAll,                            
+                        advocateID,
+                        reportedID,
+                        location,
+                        date,
+                        category,
+                        description):
+    '''
+    This function allows the reporter to update an incident they have previously
+    submitted.
+    
+    Parameters
+    ----------
+    reportID: the report ID that is being edited
+    anonymousToReported: whether the user wants to remain anonymous to the person
+                         they're reporting
+    anonymousToAll: whether the person wants to remain anonymous to all
+    advocateID: ID of the advocate
+    reportedID: ID of the person who is being reportedID
+    location: location of incident 
+    date: date of incident
+    category: type of incident 
+    description: description of incident
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    
+    curs.execute('''UPDATE incident
+                    SET anonymousToReported = %s,
+                        anonymousToAll = %s,                           
+                        advocateID = %s,
+                        reportedID = %s,
+                        location = %s,
+                        dateOfIncident = %s,
+                        category = %s,
+                        description = %s
+                    WHERE reportID = %s; ''', [anonymousToReported,
+                                                anonymousToAll,                            
+                                                advocateID,
+                                                reportedID,
+                                                location,
+                                                date,
+                                                category,
+                                                description,
+                                                reportID])
+    conn.commit()
+    return True
+    
+   
+def uploadFile(conn, attachment, reportID):
+    '''
+    This function is called in insertIncident() after a 
+    report is created when a user uploads a file.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    attachment: the file attachment to the report
+    reportID: report ID
+    '''   
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''insert into uploadblob(reportID, file) values (%s,%s)''', [reportID, attachment])
+    conn.commit()
+
+
+def getAttachment(conn, reportID):
+    '''
+    This function executes a query to select a file from a report based on a given
+    report ID.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    reportID: report ID
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select file from uploadblob where reportID = %s''', [reportID])
+    return curs.fetchone()
+
+
+
+def getAllReportedFacstaff(conn, BNUM):
+    '''
+    This function gets all incidents reported about a specific 
+    facstaff user given their BNUM, and also the name of the student who reported
+    the facstaff member.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    BNUM: faculty staff member user ID
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
+                            description as description,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        where reportedID=%s''', [BNUM])
+    return curs.fetchall()
+    
+
+def getAllReportedAdvocate(conn, BNUM):
+    ''' 
+    This function uses a faculty/staff's BNUM to get all incidents for which 
+    they are an advocate, and also the name of the students who reported.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    BNUM: a faculty/staff's BNUM
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select reportID as reportID,
+                                dateOfIncident as dateOfIncident,
+                                anonymousToReported as anonymousToReported,
+                                anonymousToAll as anonymousToAll,
+                                reporterTab.name as reporterName,
+                                advocateTab.name as advocateName,
+                                reportedTab.name as reportedName,
+                                incident.description as description
+                                
+                                from incident 
+                            inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                            inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                            inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                            where advocateID=%s''', [BNUM])    
+    return curs.fetchall()
+
+
+def getAllReportedStudent(conn, BNUM):
+    '''
+    This function gets all incidents reported by a specific 
+    student using their BNUM, and also the names of facstaff who were implicated
+    in the report.
+    
+    Parameters
+    ----------
+    conn: databse connection
+    BNUM: a student's BNUM
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select incident.reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName,
+                            incident.description as description, 
+                            attachment.file as file
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        left join uploadblob attachment on incident.reportID=attachment.reportID
+                        where reporterID=%s''', [BNUM])
+    return curs.fetchall()
+    
+    
+def getAllIncidentsInbox(conn):
+    ''' 
+    This function gets all reported incident information from the database 
+    for admin view 
+    Parameters
+    ----------
+    conn: databse connection
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select incident.reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName,
+                            incident.description as description,
+                            attachment.file as file
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        left join uploadblob attachment on incident.reportID=attachment.reportID
+                        ''')
+    return curs.fetchall()
+
+
+def getAllIncidentsAggregate(conn):
+    ''' 
+    This function gets all reported incidents for admins to view as aggregate data
+    Parameters
+    ----------
+    conn: databse connection
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select dateOfIncident as dateOfIncident,
+                            reportedTab.name as reportedName,
+                            incident.location as location,
+                            incident.category as category
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        ''')
+    return curs.fetchall()
+
+
+def getIncidentInfo(conn, id):
+    '''
+    This function gets one incident based on a given reportID
+    Parameters
+    ----------
+    conn: databse connection
+    id: report ID
+    '''
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''select incident.reportID as reportID,
+                            dateOfIncident as dateOfIncident,
+                            anonymousToReported as anonymousToReported,
+                            anonymousToAll as anonymousToAll,
+                            reporterTab.name as reporterName,
+                            advocateTab.name as advocateName,
+                            reportedTab.name as reportedName,
+                            incident.description as description,
+                            incident.location as location,
+                            incident.category as category,
+                            incident.reporterID as reporterID,
+                            incident.reportedID as reportedID,
+                            incident.advocateID as advocateID,
+                            attachment.file as file
+                            
+                            
+                            from incident 
+                        inner join user reporterTab on incident.reporterID=reporterTab.BNUM 
+                        inner join user advocateTab on incident.advocateID=advocateTab.BNUM 
+                        inner join user reportedTab on incident.reportedID=reportedTab.BNUM
+                        left join uploadblob attachment on incident.reportID=attachment.reportID
+                        where incident.reportID = %s
+                        ''', [id])
+    return curs.fetchone()
+
+
+def deleteIncident(conn, id):
+    '''
+    This function deletes one incident based on the given reportID
+    Parameters
+    ----------
+    conn: databse connection
+    id: report ID
+    '''
+    
+    curs = conn.cursor(MySQLdb.cursors.DictCursor)
+    curs.execute('''delete from incident where reportID = %s''', [id])
+    conn.commit()
+
+if __name__ == '__main__':
+    conn = getConn('c9')
+    # print(getAllReportedFacstaff(conn, 10000000))
+    # print(getAllReportedStudent(conn, 1))
+    # print(getAllIncidents(conn))
+/*
+tables.sql
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+*/
+
+use c9;
+
+drop table if exists uploadblob;
+drop table if exists incident;
+drop table if exists user;
+
+
+create table user(
+	BNUM		integer auto_increment primary key,
+	hashed		char(60),
+	name 		varchar(100),
+	email 		varchar(30),
+	unique(email),
+	isAdmin 	Boolean,
+	role 		enum ('facstaff', 'student')
+)
+ENGINE = InnoDB;
+
+
+create table incident(
+	reportID 		        integer auto_increment primary key,
+	reporterID 		        integer,
+	reportedID 		        integer,
+	advocateID		        integer,
+	location 		        varchar(30),
+	category		        enum('racism', 'sexism', 'ableism', 'sexual harassment', 'other'),
+	dateOfIncident 		    date,
+	anonymousToAll   	    Boolean,
+	anonymousToReported 	Boolean,
+    description		        varchar(100),
+    foreign key (reporterID) references user(BNUM),
+    foreign key (reportedID) references user(BNUM),
+    foreign key (advocateID) references user(BNUM)
+)
+ENGINE = InnoDB;
+
+create table uploadblob(
+	reportID integer primary key,
+	file mediumblob,
+	foreign key (reportID) references incident(reportID)
+)
+ENGINE = InnoDB;
+[{
+	"name": "Katherine2",
+	"email": "kgao2@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "abcd123"
+},{
+	"name": "Karina Lin",
+	"email": "klin@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "karina123"
+},{
+	"name": "Julia Klugherz",
+	"email": "jklugher@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "jklughz123"
+},{
+	"name": "Stud1",
+	"email": "stu1@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student009"
+},{
+	"name": "Stud2",
+	"email": "stu2@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student123"
+},{
+	"name": "Stud3",
+	"email": "stu3@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student2838"
+},{
+	"name": "Stud4",
+	"email": "stu4@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student2309"
+},{
+	"name": "Stud5",
+	"email": "stu5@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student2340"
+},{
+	"name": "Stud6",
+	"email": "stu6@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student3920"
+},{
+	"name": "Stud7",
+	"email": "stu7@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student20394"
+},{
+	"name": "Scott Anderson",
+	"email": "scott@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "TRUE",
+	"password": "supersecret"
+},{
+	"name": "Brian Tjaden",
+	"email": "btjaden@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "brian20394"
+},{
+	"name": "Sohie Lee",
+	"email": "slee@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "sohie2093"
+},{
+	"name": "fs1",
+	"email": "fs1@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember1231"
+},{
+	"name": "fs2",
+	"email": "fs2@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember23094"
+},{
+	"name": "fs3",
+	"email": "fs3@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember203"
+},{
+	"name": "fs4",
+	"email": "fs4@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember3920"
+},{
+	"name": "fs5",
+	"email": "fs5@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember2992"
+},{
+	"name": "Cibele Matos Freire",
+	"email": "cmatosfr@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "cibele23094"
+},{
+	"name": "Stella Kakavouli",
+	"email": "skakavo@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "stella20390"
+}
+]
+'''
+testData.py
+CS304 SP19 Final Project
+Julia Klugherz, Karina Lin, Katherine Gao
+
+This is a python file to read a JSON file of test data that we can insert
+into our SQL database more efficiently.
+'''
+
+import json, incidentReporter, bcrypt
+
+with open('testData.json', 'r') as f:
+    users = json.load(f)
+
+# for each object in the parsed JSON file we hash the user's password and 
+# then add that and all their information (name, email, administrative status, role) into
+# our database using the insertNewUser function from incidentReporter.py
+for user in users:
+    hashed = bcrypt.hashpw(user['password'].encode('utf-8'), bcrypt.gensalt())
+    name = user['name']
+    email = user['email']
+    isAdmin = user['adminStatus']
+    role = user['role']
+    conn = incidentReporter.getConn('c9') 
+    incidentReporter.insertNewUser(conn, hashed, name, email, isAdmin, role)
+<!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+{% extends "base.html" %}
+
+{% block content %}
+    <body>
+        <div id="detail-box" class="row justify-content-center">
+            There have been {{numWeek}} incident(s) this week.
+        </div>
+        
+        <div id="detail-box" class="row justify-content-center">
+            Below are the number of incidents each person has been reported for:<br>
+            {% for key,value in reportedCounts.iteritems() %}
+                {{key}}: {{value}} <br>
+            {% endfor %}
+        </div>
+        
+        <div id="detail-box" class="row justify-content-center">
+            Below are the number of incidents per location:<br>
+            {% for key,value in locationCounts.iteritems() %}
+                {{key}}: {{value}}<br>
+            {% endfor %}
+        </div>
+        
+        <div id="detail-box" class="row justify-content-center">
+            Below are the number of incidents per category:<br>
+            {% for key,value in categoryCounts.iteritems() %}
+                {{key}}: {{value}}<br>
+            {% endfor %}
+        </div>
+       
+    </body>
+{% endblock %}<!doctype html>
+<html lang='en'>
+<link rel='stylesheet' href="{{url_for('static',filename='report-style.css')}}">
+
+<head>
+    <meta charset='utf-8'>
+    <meta name=author content="Karina Lin, Julia Klugherz, Katherine Gao">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
+    <title>{{ page_title }}</title>
+
+    {% block headstuff %}{% endblock %}
+</head>
+
+<body>
+
+<p id="flash">
+        {% with messages = get_flashed_messages() %} 
+            {% if messages %} 
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %} 
+            {% endif %} 
+        {% endwith %}
+</p>
+    
+    {% if userID == None %}
+    <div class="login-wrap">
+	<div class="login-html">
+	    <h1 id="title">Incident Reporter</h1>
+		<input id="tab-1" type="radio" name="tab" class="sign-in" checked><label for="tab-1" class="tab">Sign In</label>
+		<input id="tab-2" type="radio" name="tab" class="sign-up"><label for="tab-2" class="tab">Sign Up</label>
+		
+		<div class="login-form">
+			<div class="sign-in-htm">
+			    <form id="loginform" action="{{url_for('login')}}" method="post">
+				<div class="group">
+					<label for="email" class="label">Email: </label>
+					<input id="email" name="email" required type="email" class="input">
+				</div>
+				<div class="group">
+					<label for="password" class="label">Password: </label>
+					<input type="password" name="password" id="password" required class="input"></input>
+				</div>
+				
+				<div class="group">
+					<button name="submit" type="submit" class="button">Submit</button>
+				</div>
+				
+				<div class="hr"></div>
+				</form>
+			</div>
+      
+      <div class="sign-up-htm">
+          <form id="joinform" action="{{url_for('join')}}" method="post">
+                <div class="group">
+                  <p><label for="name" class="label">Name: </label>
+                      <input class="input" id="name" name="name" required></p>
+                </div>
+                
+                <div class="group">
+					<p><label for="email-j" class="label">Email: </label>
+                    <input class="input" id="email-j" name="email-j" required type="email"></p>
+				</div>
+				
+				<div class="group">
+					<p><label for="password1" class="label">Password: </label>
+                    <input class="input" type="password" id="password1" name="password1" required></p>
+				</div>
+				
+				<div class="group">
+					<p><label for=password2 class="label">Repeat Password: </label>
+                    <input class="input" type="password" id="password2" name="password2" required></p>
+                </div>
+
+                    <fieldset> 
+                    <legend class="label"> Type of Account: </legend>
+                    <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="userType" id="fac-staff" value="facstaff">
+                    <label class="form-check-label" for="fac-staff">Faculty/Staff Member</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="userType" id="stud" value="student">
+                    <label class="form-check-label" for="stud">Student</label>
+                    </div>
+                    </fieldset>
+				<div class="group">
+					<p><button type="submit" class="button">Submit</button></p>
+				</div>
+				
+				<div class="hr"></div>
+				
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+    
+
+    {% else %} 
+    <!--- Navigation bar content varies depending on user type !--->
+        
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: rgba(33, 208, 226, 0.5);">
+        
+        
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+            <a class="nav-item nav-link" href="{{url_for('home')}}">Home</a>
+            </li>
+            {% if userType == "student" %}
+            <li class="nav-item">
+                <a class="nav-item nav-link" href="{{url_for('studentInbox')}}">Incidents You've Reported</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-item nav-link" href="{{url_for('incidentReport')}}">Report an Incident</a>
+            </li>
+            {% endif %}
+    
+            {% if userType == "facstaff" %}
+                <li class="nav-item">
+                <a class="nav-item nav-link" href="{{url_for('facstaffInbox')}}">Incidents Reported Against You</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-item nav-link" href="{{url_for('advocateInbox')}}">Incidents For Which You are an Advocate</a>
+                </li>
+            {% endif %} 
+        
+            {% if admin %}
+                <li class="nav-item">
+                    <a class="nav-item nav-link" href="{{url_for('adminInbox')}}">All Incidents</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-item nav-link" href="{{url_for('aggregate')}}">Aggregate Data Dashboard</a>
+                </li>
+            {% endif %}
+        </ul>
+        <span class="navbar-text">
+          Your BNumber is {{ userID }}
+        </span>
+        
+        <form class="form-inline" id="log-out" action="{{ url_for('logout') }}">
+        <input class="btn btn-sm btn-outline-secondary" name="log-out" type="submit" value="Log Out">
+        </form>
+        
+        </div>
+        </div>
+    </nav>
+    
+
+    {% endif %}
+    
+    
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <footer>
+        {% block footer %}
+        <br>
+        <br> Created by Karina Lin, Katherine Gao, and Julia Klugherz as a final project for CS304 
+        {% endblock %}
+    </footer>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html><!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+{% extends "base.html" %}
+
+{% block content %} 
+
+
+<div class="row">
+    <div class="col-sm">
+<div><h1 id="home-title">Welcome{% if 'UID' in session %}, {{session.get('name')}} {% endif %} </h1></div>
+<h2 id="tag-line"> Incident Reporter is a web application for a safer and more aware learning environment.</h2>
+<div class="app-info">
+    <p id="about">About</p>
+    
+    It is imperative for one's educational experience that they feel safe in their learning environment.
+    
+    <br><br>
+    
+    In a student-professor relationship, a professor holds all the power.  But, it is very possible that a professor 
+    make a student feel unsafe.  These incidents should be addressed, even if the incident had no malicious intent 
+    as addressing issues is part of the learning experience for all.
+    
+    <br><br>
+    
+    Incident Reporter protects students while allowing proper actions to be taken to ensure a safe learning environment for all.
+    In reporting incidents, students are given agency in determining the level of anonyminity they are comfortable with. There are
+    many situations where a student might not feel comfortable identifying themselves, given the power professor hold over students.
+    
+    <br><br>
+    
+    At the same time, Incident Reporter protects professors from unfounded claims.  In submitting an incident against a professor,
+    students are expected to identify a faculty or staff member to act as their advocate.  This advocate will act as the liaison between
+    the student and the reported, allowing the reported to ask for clarification while still protecting student's privacy.
+    
+    <br><br>
+    
+    Finally, Incident Reporter allows institutions to work towards data-driven actions against discriminatory actions.
+    By allowing community administrators birds-eye-level views of data, administrators are given the ability to identify
+    patterns and take action if necessary.
+</div>    
+</div>
+</div>
+{% endblock %}<!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+    <table class="table table-hover" id="incident-list">
+  <thead>
+    <tr>
+      <th scope="col">Report ID</th>
+      <th scope="col">Incident Date</th>
+      
+      {% if userType == "facstaff" or isAdmin %}
+                    <!-- Only for admin and facstaff --> 
+                    <th>Reporter</th> <!-- Anonymize if necessary -->
+                    {% endif %}
+       
+       {% if userType == "student" or isAdmin %}
+                    <!-- Only for student and admin -->
+                    <th>Reported</th> <!-- Will be ID, maybe we can do an inner join to get the name of this person later on -->
+                    {% endif %}
+                    
+      <th scope="col">Advocate</th>
+      <th scope="col">Description</th>
+      
+      {% if userType == "student" or isAdmin %}
+      <th scope="col">Attachments</th>
+      {% endif %}
+      
+      {% if userType == "student" %}
+      <th scope="col">Edit</th>
+      {% endif %}
+      
+      <th scope="col">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+  
+    {% for incident in incidentsList %}
+                    
+        <tr>
+            <td>{{incident.reportID}}</td>
+            <td>{{incident.dateOfIncident}}</td>
+                        
+    <!-- Reporter name (for facstaff and admin) -->
+
+    {% if userType == "facstaff" %}
+        {% if not isAdmin %}
+            {% if incident.anonymousToReported == 1 %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.reporterName}}</td> 
+            {% endif %}
+
+        {% else %} <!-- user is admin -->
+            {% if incident.anonymousToAll == 1 %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.reporterName}}</td> 
+            {% endif %}
+        {% endif %}
+    {% endif %}     
+    
+            <!-- Reported name (for student or admin) -->
+            {% if userType == "student" %}
+            <td>{{incident.reportedName}}</td> 
+            {% endif %} 
+            
+            {% if isAdmin %}
+            <td>{{incident.reportedName}}</td> 
+            {% endif %}
+            
+            <!--AdvocateName-->
+            <td>{{incident.advocateName}}</td>
+        
+            <td>{{incident.description}}</td> 
+            
+            <!-- Attachment column -->
+            <td>
+                {% if incident.file %} 
+                <form action="{{ url_for('attachment', reportID=incident.reportID) }}">
+                    <input class="btn btn-outline-dark" type="submit" value="View File">
+                </form>
+                {% endif %}
+            </td>
+             {% if userType == "student" %}
+                <td>
+                <form action="{{ url_for('editDetailPage', id=incident.reportID) }}">
+                    <input class="btn btn-outline-dark" type="submit" value="Edit Incident">
+                </form>
+            </td>
+            {% endif %} 
+            <td>
+                <form action="{{ url_for('incidentDetailPage', id=incident.reportID) }}">
+                    <input class="btn btn-outline-dark" type="submit" value="More Details">
+                </form>
+            </td>
+            
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+         
+    </body>
+{% endblock %}
+</html><!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+
+{% extends "base.html" %}
+
+{% block content %}
+    <body>
+        <div id="detail-box" class="row justify-content-center">
+        Incident ID: {{incident.reportID}} <br>
+        {% if session.get('role') == "facstaff" or session.get('admin') %}
+            <!-- Only for admin and facstaff --> 
+            Reporter: <!-- Anonymize if necessary -->
+        {% endif %}  
+        
+        {% if session.get('role') == "facstaff" %}
+            {% if incident.anonymousToReported %}
+                Anonymous
+            {% else %}
+                {{incident.reporterName}}
+            {% endif %}
+        {% endif %}
+        
+        {% if session.get('admin') %}
+            {% if incident.anonymousToAll %}
+                <td>Anonymous</td>
+            {% else %}
+                <td>{{incident.reporterName}}</td> 
+            {% endif %}
+        {% endif %}
+        <br>
+        
+        Reported: {{incident.reportedName}} <br>
+        Advocate: {{incident.advocateName}} <br>
+        Location: {{incident.location}} <br>
+        Category: {{incident.category}} <br>
+        Date of Incident: {{incident.dateOfIncident}} <br>
+        Description: {{incident.description}} 
+        
+        </div>
+        
+        {% if session.get('role') == "student" %}
+        <div id="delete" class="row justify-content-center">
+        <div class="form-group">
+        <form action="{{ url_for('deleteIncident', id=incident.reportID) }}">
+            <input class="btn btn-danger" type="submit" value="Delete Incident">
+        </form>
+        </div>
+        </div>
+        {% endif %}
+        
+    </body>
+{% endblock %}
+</html><!--author: Karina Lin, Julia Klugherz, Katherine Gao-->
+
+{% extends "base.html" %}
+
+{% block content %}
+{% if submit is sameas false %}
+    <h6 id="message">not yet saved</h6>
+{% endif %}
+
+{% if submit is sameas true %}
+    <h1 id="form-title">Report an Incident</h1>
+{% else %}
+    <h1 id="form-title">Edit an Incident</h1>
+{% endif %}
+
+
+<div class="row justify-content-center">
+<form action="{{url_for('incidentReport')}}" method="post" enctype="multipart/form-data" id="submissionform">
+    
+    <h2 class="form-headings">Reporter Information</h2>
+    <div class="form-group">
+    <h7 hidden id="reportID" value={{incidentInfo.reportID}}> {{incidentInfo.reportID}} </h7>
+
+    
+<fieldset>
+    <legend id="anon1">Do you want to remain anonymous to the person you are reporting?</legend>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="anon-r" id="anon-ry" value="1" required {% if 1==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
+    <label class="form-check-label" for="anon-ry" >Yes</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="anon-r" id="anon-rn" value="0" required {% if 0==incidentInfo.anonymousToReported %} checked="checked"{% endif %}>
+    <label class="form-check-label" for="anon-rn">No</label>
+</div>
+</fieldset>
+
+<fieldset>
+    <legend id="anon2">Do you want to remain anonymous to everyone?</legend>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="anon-all" id="anon-all-y" value="1" required {% if 1==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
+    <label class="form-check-label" for="anon-all-y">Yes</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="anon-all" id="anon-all-n" value="0" required {% if 0==incidentInfo.anonymousToAll %} checked="checked"{% endif %}>
+    <label class="form-check-label" for="anon-all-n">No</label>
+</div> 
+</fieldset>
+<br>
+
+    <label for="advocate"> Advocate Name:
+    <select name="advocate" id="advocate">
+            <option value="">
+    {% for fac in facStaff %}
+            <option value="{{fac.BNUM}}" {% if fac.BNUM==incidentInfo.advocateID %} selected="selected"{% endif %}> {{fac.name}} </option>
+    {% endfor %}
+            </select>
+    </label> <br>
+    
+    <h2 class="form-headings"> Incident Information </h2>
+    <label for="faculty"> Who are you reporting?
+   
+    <select name="faculty" id="faculty">
+            <option value="">
+    {% for fac in facStaff %}
+            <option value= "{{fac.BNUM}}" {% if fac.BNUM==incidentInfo.reportedID %} selected="selected"{% endif %}>{{fac.name}}</option>
+    {% endfor %}
+            </select>
+    </label> <br>
+    
+    <!-- make sure that the user is not choosing the person they are reporting
+         as their advocate !--->
+         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+    
+    /* global $ */
+        var adv = $("#advocate").val();
+        var reported = $("#faculty").val();
+        
+        if (adv == reported) {
+            alert("you cannot name the person you are reporting as an advocate!");
+        }
+    </script>
+    
+    
+    <label for="location"> Location of Incident:
+        <input id="location" type="text" name="location" size="30" value = "{{incidentInfo.location}}" required autofocus>
+    </label> <br>
+    
+    <label for="date"> Date of Incident: 
+        <input type="date" id="date" value = "{{incidentInfo.dateOfIncident}}" name="date" required>
+    </label> <br>
+    
+    
+    
+    <label for="category" > Type of Incident: 
+    <select name="category" id="category" required>
+            <option value="">
+            <option value= "racism" {% if incidentInfo.category=="racism" %} selected="selected"{% endif %}>Racism</option>
+            <option value= "ableism" {% if incidentInfo.category == "ableism" %} selected="selected"{% endif %}>Ableism</option>
+            <option value= "sexism" {% if incidentInfo.category == "sexism" %} selected="selected"{% endif %}>Sexism</option>
+            <option value= "sexual harassment" {% if incidentInfo.category=="sexual harassment" %} selected="selected"{% endif %}>Sexual Harassment</option>
+            <option value= "other" {% if incidentInfo.category == "other" %} selected="selected"{% endif %}>Other</option>
+        </select>
+    </label> <br>
+    
+    <label for="description"> Description of the incident:
+        <textarea name="description" id="description" rows="10" cols="30" required> {{incidentInfo.description}}</textarea>
+    </label>
+    
+    {% if submit == True %}
+        <p><label for="file">Upload a file: <input type="file" id="file" name="file" ></label></p>
+    
+        <p id="enter"> <input class="btn btn-outline-success" type='submit' value='Submit'> </p>
+    {% endif %}
+    
+</form>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        /* global $ */
+
+        $("#description").change(function(){
+            $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+        $("#advocate").change(function(){
+            $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+        $("#anon-ry").change(function(){
+            $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+         $("#anon-rn").change(function(){
+             $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+         $("#anon-all-y").change(function(){
+             $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+         $("#anon-all-n").change(function(){
+             $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+         $("#faculty").change(function(){
+             $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+         $("#location").change(function(){
+             $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+         $("#date").change(function(){
+             $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+         $("#category").change(function(){
+             $("#message").html("Updating changes...");
+            updateIncident();
+        });
+        
+        function updateIncident() {
+            const reportID = document.getElementById("reportID").getAttribute("value");
+            const anonToReported = $("input:radio[name=anon-r]:checked").val();
+
+            const anonToAll = $("input:radio[name=anon-all]:checked").val();
+
+            var advocateDropDown = document.getElementById("advocate");
+            var advocate = advocateDropDown.options[advocateDropDown.selectedIndex].value;
+
+            var reportedDropDown = document.getElementById("faculty");
+            var reported = reportedDropDown.options[reportedDropDown.selectedIndex].value;
+
+            const locationValue = document.getElementById('location').value;
+
+            const date = document.getElementById('date').value;
+
+            var categoryDropDown = document.getElementById("category");
+            var category = categoryDropDown.options[categoryDropDown.selectedIndex].value;
+
+            const description = document.getElementById('description').value;
+            
+            console.log(reportID);
+            console.log(description);
+
+            $.get("{{url_for('updateIncident')}}", {"reportID": reportID, 
+                                                "anonymousToReported": anonToReported,
+                                                "anonymousToAll": anonToAll,
+                                                "advocateID": advocate,
+                                                "reportedID": reported,
+                                                "location": locationValue,
+                                                "date": date,
+                                                "category": category,
+                                                "description": description
+                                                }, showSuccessMessage)
+        }
+        
+        function showSuccessMessage(obj) {
+            if(obj.error) {
+                $("#errors").empty().html('Error: '+obj.err);
+            } else {
+                $("#message").html("Change Saved Successfully");
+            }
+    }
+
+    </script>
+
+{% endblock %}
+body{
+	margin:0;
+	color:#AEDDEE;
+	background:#c8c8c8;
+	font:600 16px/18px 'Open Sans',sans-serif;
+}
+
+#title {
+    text-align: center;
+}
+
+#content {
+    padding-top: 10px;
+}
+
+*,:after,:before{box-sizing:border-box}
+.clearfix:after,.clearfix:before{content:'';display:table}
+.clearfix:after{clear:both;display:block}
+a{color:inherit;text-decoration:none}
+
+.login-wrap{
+	width:100%;
+	margin:auto;
+	max-width:525px;
+	min-height:670px;
+	border-radius: 20px;
+	position:relative;
+	background-color: #90D1F9;
+	background-color:rgba(251,250,148,.3);
+}
+	
+.login-html{
+	width:100%;
+	height:100%;
+	position:absolute;
+	padding:25px 70px 50px 70px;
+}
+
+.login-html .sign-in-htm,
+.login-html .sign-up-htm{
+	top:0;
+	left:0;
+	right:0;
+	bottom:0;
+	position:absolute;
+	transform:rotateY(180deg);
+	backface-visibility:hidden;
+	transition:all .4s linear;
+}
+.login-html .sign-in,
+.login-html .sign-up,
+.login-form .group .check{
+	display:none;
+}
+.login-html .tab,
+.login-form .group .label,
+.login-form .label,
+.form-check-label,
+.login-form .group .button{
+	text-transform:uppercase;
+}
+.login-html .tab{
+	font-size:22px;
+	margin-right:15px;
+	padding-bottom:5px;
+	margin:0 15px 10px 0;
+	display:inline-block;
+	border-bottom:2px solid transparent;
+}
+.login-html .sign-in:checked + .tab,
+.login-html .sign-up:checked + .tab{
+	color:#21D0E2;
+	border-color:#21D0E2;
+}
+.login-form{
+	min-height:345px;
+	position:relative;
+	perspective:1000px;
+	transform-style:preserve-3d;
+}
+.login-form .group{
+	margin-bottom:15px;
+}
+.login-form .group .label,
+.login-form .label,
+.form-check-label,
+.login-form .group .input,
+.login-form .group .button{
+	width:100%;
+	color:#fff;
+	display:block;
+}
+.login-form .group .input,
+.login-form .group .button{
+	border:none;
+	padding:15px 20px;
+	border-radius:25px;
+	background-color:#CCD3D6;
+}
+
+.login-form .group .input:focus,
+.login-form .group .button:focus{
+    outline: none; 
+    border-radius: 25px;  
+    box-shadow: 0px 0px 1px rgba(0,100,255,1),
+              0px 0px 2px rgba(0,100,255,1),
+              0px 0px 3px rgba(0,100,255,1); /* #0064FF */
+}
+
+.login-form .group input[data-type="password"]{
+	text-security:circle;
+	-webkit-text-security:circle;
+}
+.login-form .group .label,
+.login-form .label,
+.form-check-label {
+	color:#0A0A01;
+	font-size:12px;
+}
+
+.form-check {
+    padding-bottom: 15px;
+}
+.login-form .group .button{
+	background:#21D0E2;
+}
+.login-form .group label .icon{
+	width:15px;
+	height:15px;
+	border-radius:2px;
+	position:relative;
+	display:inline-block;
+	background:rgba(255,255,255,.1);
+}
+.login-form .group label .icon:before,
+.login-form .group label .icon:after{
+	content:'';
+	width:10px;
+	height:2px;
+	background:#fff;
+	position:absolute;
+	transition:all .2s ease-in-out 0s;
+}
+.login-form .group label .icon:before{
+	left:3px;
+	width:5px;
+	bottom:6px;
+	transform:scale(0) rotate(0);
+}
+.login-form .group label .icon:after{
+	top:6px;
+	right:0;
+	transform:scale(0) rotate(0);
+}
+.login-form .group .check:checked + label{
+	color:#fff;
+}
+.login-form .group .check:checked + label .icon{
+	background:#1161ee;
+}
+.login-form .group .check:checked + label .icon:before{
+	transform:scale(1) rotate(45deg);
+}
+.login-form .group .check:checked + label .icon:after{
+	transform:scale(1) rotate(-45deg);
+}
+.login-html .sign-in:checked + .tab + .sign-up + .tab + .login-form .sign-in-htm{
+	transform:rotate(0);
+}
+.login-html .sign-up:checked + .tab + .login-form .sign-up-htm{
+	transform:rotate(0);
+}
+
+.hr{
+	height:2px;
+	margin:60px 0 50px 0;
+	background: #B5D6FF;
+	background:rgba(181,214,255,.2);
+}
+.foot-lnk{
+	text-align:center;
+}
+
+.app-info {
+    font-size: 14px;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    padding-left: 150px;
+    padding-right: 150px;
+}
+
+.navbar-text {
+    font-style: italic;
+    padding-right: 15px;
+}
+
+.nav-item {
+    color: black; 
+}
+
+#home-title, #tag-line {
+    text-align: center;
+}
+
+#tag-line {
+    font-size: 16px;
+}
+#about {
+    font-style: italic;
+}
+
+
+h2 { 
+ border:0 solid #fff; 
+ border-bottom-width:1px;
+ padding-bottom:10px;
+ text-align: center;
+}
+
+
+
+#form-title {
+    text-align: center;
+}
+
+#detail-box {
+    padding-left: 50px;
+    padding-right: 50px;
+    border-radius: 10px;
+    text-align: center;
+    border-style: solid;
+    background-color: rgba(156,231,250,.5);
+    padding-bottom: 10px;
+    padding-top: 10px;
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+legend {
+    font-size: 1rem;
+}
+
+
+#delete {
+    padding-top: 10px;
+}
+
+
+footer {
+    font-size: 12px;
+}

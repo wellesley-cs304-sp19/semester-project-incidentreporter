@@ -67,19 +67,6 @@
             </select>
     </label> <br>
     
-    <!-- make sure that the user is not choosing the person they are reporting
-         as their advocate !--->
-         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script>
-    
-    /* global $ */
-        var adv = $("#advocate").val();
-        var reported = $("#faculty").val();
-        
-        if (adv == reported) {
-            alert("you cannot name the person you are reporting as an advocate!");
-        }
-    </script>
     
     
     <label for="location"> Location of Incident:
