@@ -148,11 +148,12 @@
         {% with messages = get_flashed_messages() %} 
             {% if messages %} 
                 {% for message in messages %}
-                    <p>{{ message }}</p>
+                    <p style="padding: 10px;">{{ message }}</p>
                 {% endfor %} 
             {% endif %} 
         {% endwith %}
     </p>
+
     
     <div id="content">
         {% block content %}{% endblock %}
@@ -161,7 +162,7 @@
     <footer>
         {% block footer %}
         <br>
-        <br> Created by Karina Lin, Katherine Gao, and Julia Klugherz as a final project for CS304 
+        <br><p style="padding: 10px"> Created by Karina Lin, Katherine Gao, and Julia Klugherz as a final project for CS304 </p>
         {% endblock %}
     </footer>
 
