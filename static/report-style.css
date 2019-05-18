@@ -13,6 +13,10 @@ body{
     padding-top: 10px;
 }
 
+#alert {
+	text-align: center;
+}
+
 *,:after,:before{box-sizing:border-box}
 .clearfix:after,.clearfix:before{content:'';display:table}
 .clearfix:after{clear:both;display:block}
