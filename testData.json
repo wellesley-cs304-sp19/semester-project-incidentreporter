@@ -1,0 +1,122 @@
+[{
+	"name": "Katherine2",
+	"email": "kgao2@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "abcd123"
+},{
+	"name": "Karina Lin",
+	"email": "klin@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "karina123"
+},{
+	"name": "Julia Klugherz",
+	"email": "jklugher@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "jklughz123"
+},{
+	"name": "Stud1",
+	"email": "stu1@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student009"
+},{
+	"name": "Stud2",
+	"email": "stu2@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student123"
+},{
+	"name": "Stud3",
+	"email": "stu3@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student2838"
+},{
+	"name": "Stud4",
+	"email": "stu4@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student2309"
+},{
+	"name": "Stud5",
+	"email": "stu5@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student2340"
+},{
+	"name": "Stud6",
+	"email": "stu6@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student3920"
+},{
+	"name": "Stud7",
+	"email": "stu7@wellesley.edu",
+	"role": "student",
+	"adminStatus": "FALSE",
+	"password": "student20394"
+},{
+	"name": "Scott Anderson",
+	"email": "scott@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "TRUE",
+	"password": "supersecret"
+},{
+	"name": "Brian Tjaden",
+	"email": "btjaden@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "brian20394"
+},{
+	"name": "Sohie Lee",
+	"email": "slee@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "sohie2093"
+},{
+	"name": "fs1",
+	"email": "fs1@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember1231"
+},{
+	"name": "fs2",
+	"email": "fs2@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember23094"
+},{
+	"name": "fs3",
+	"email": "fs3@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember203"
+},{
+	"name": "fs4",
+	"email": "fs4@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember3920"
+},{
+	"name": "fs5",
+	"email": "fs5@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "staffmember2992"
+},{
+	"name": "Cibele Matos Freire",
+	"email": "cmatosfr@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "cibele23094"
+},{
+	"name": "Stella Kakavouli",
+	"email": "skakavo@wellesley.edu",
+	"role": "facstaff",
+	"adminStatus": "FALSE",
+	"password": "stella20390"
+}
+]

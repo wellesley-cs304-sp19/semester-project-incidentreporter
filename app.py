@@ -39,7 +39,7 @@ def join():
         
         Finally, redirects to home route.
         
-        Any potential errors are printed to the console. 
+        Any potential errors are flashed. 
     '''
     try:
         name = request.form.get('name')
@@ -85,7 +85,7 @@ def login():
         
         Finally, redirects to home page.
         
-        Any potential errors are printed to the console.
+        Any potential errors are flashed.
     '''
     try:
         email = request.form.get('email')
@@ -102,7 +102,6 @@ def login():
         hashed = person['hashed']
         # strings always come out of the database as unicode objects
         if bcrypt.hashpw(passwd.encode('utf-8'),hashed.encode('utf-8')) == hashed:
-            flash('successfully logged in as '+ email)
             session['name'] = person['name']
             session['email'] = email
             session['UID'] = person['BNUM']
@@ -122,7 +121,7 @@ def login():
 def logout():
     '''
     logout() route 
-    - Pops uid from session
+    - Pops all user information from session
     - Redirects to home page
     '''  
     try:
@@ -138,7 +137,7 @@ def logout():
             flash('You are logged out')
             return redirect(url_for('home'))
         else:
-            flash('you are not logged in. Please login or join')
+            flash('You are not logged in. Please login or join')
             return redirect( url_for('home') )
     except Exception as err:
         flash('some kind of error '+str(err))
@@ -146,21 +145,24 @@ def logout():
         
 @app.route('/incidentDetailPage/<id>')
 def incidentDetailPage(id):
-    '''
-    incidentDetailPage(id) shows one incident in detail based on incident ID
+    '''This function shows takes one parameter, id, the incident ID and 
+       renders the page with all details regarding the incident with the given ID.
     ''' 
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
-    userType = session['role'] 
+    userType = session['role']
+    admin = session.get('admin')
     incidentInfo = incidentReporter.getIncidentInfo(conn, id)
-    return render_template('incidentDetailPage.html', userID=uid, userType=userType, incident=incidentInfo, page_title="detail page")
+    return render_template('incidentDetailPage.html', userID=uid,admin=admin, userType=userType, incident=incidentInfo, page_title="detail page")
+
     
       
 @app.route('/deleteIncident/<id>')
 def deleteIncident(id):
-    '''
-    deleteIncident(id) deletes incident report
-    - Only original reporter can delete an incident report
+    ''' This function takes an ID of an incident report as a parameter and 
+        deletes the incident report associated with the given ID. 
+        - Only the original reporter can delete an incident report
+        - Renders home page
     '''  
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
@@ -171,7 +173,8 @@ def deleteIncident(id):
 @app.route('/editDetailPage/<id>')
 def editDetailPage(id):
     '''
-    editDetailPage(id) leads to a page where students can edit the incidents they have already created
+    This function takes in one parameter, an incident report ID. This route
+    leads to a page where students can edit the incidents they have already created
     -only students can edit reports
     -reports will be automatically saved via ajax
     '''
@@ -241,11 +244,12 @@ def incidentReport():
             reportLock.release()
             return redirect(url_for('studentInbox', userType=userType, admin=admin, page_title="student inbox"))
 
-'''
-studentInbox() displays all incidents reported by student
-'''    
+    
 @app.route('/studentInbox/')
 def studentInbox():
+    '''
+    This route renders the student inbox which displays all incidents reported by student
+    '''
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
     userType = session['role']
@@ -294,7 +298,8 @@ def updateIncident():
 @app.route('/facstaffInbox/')
 def facstaffInbox():
     '''
-    facstaffInbox() displays all incidents reports in which the facstaff is reported 
+    This route renders the faculty/staff inbox which displays all incident reports 
+    in which the facstaff is reported 
     ''' 
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
@@ -307,8 +312,8 @@ def facstaffInbox():
 @app.route('/advocateInbox/')
 def advocateInbox():
     '''
-    advocateInbox() displays all incidents reports in which 
-    the facstaff named an advocate
+    This route renders the advocate inbox which displays all incidents reports in which 
+    the facstaff is named an advocate
     '''  
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']
@@ -322,7 +327,7 @@ def advocateInbox():
 @app.route('/adminInbox/')
 def adminInbox():
     '''
-    adminInbox() displays all reported incidents (for admin)
+    This route renders the admin inbox which displays all reported incidents (for admin)
     '''
     conn = incidentReporter.getConn('c9')   
     uid = session['UID']

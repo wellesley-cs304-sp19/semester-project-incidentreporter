@@ -13,11 +13,21 @@
 </head>
 
 <body>
+
+<p id="flash">
+        {% with messages = get_flashed_messages() %} 
+            {% if messages %} 
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %} 
+            {% endif %} 
+        {% endwith %}
+</p>
     
     {% if userID == None %}
     <div class="login-wrap">
 	<div class="login-html">
-	    
+	    <h1 id="title">Incident Reporter</h1>
 		<input id="tab-1" type="radio" name="tab" class="sign-in" checked><label for="tab-1" class="tab">Sign In</label>
 		<input id="tab-2" type="radio" name="tab" class="sign-up"><label for="tab-2" class="tab">Sign Up</label>
 		
@@ -142,18 +152,6 @@
     
 
     {% endif %}
-    
-    
-    <p>
-        {% with messages = get_flashed_messages() %} 
-            {% if messages %} 
-                {% for message in messages %}
-                    <p style="padding: 10px;">{{ message }}</p>
-                {% endfor %} 
-            {% endif %} 
-        {% endwith %}
-    </p>
-
     
     <div id="content">
         {% block content %}{% endblock %}
