@@ -10,12 +10,12 @@
       <th scope="col">Report ID</th>
       <th scope="col">Incident Date</th>
       
-      {% if userType == "facstaff" or isAdmin %}
+      {% if userType == "facstaff" or admin %}
                     <!-- Only for admin and facstaff --> 
                     <th>Reporter</th> <!-- Anonymize if necessary -->
                     {% endif %}
        
-       {% if userType == "student" or isAdmin %}
+       {% if userType == "student" or admin %}
                     <!-- Only for student and admin -->
                     <th>Reported</th> <!-- Will be ID, maybe we can do an inner join to get the name of this person later on -->
                     {% endif %}
@@ -23,7 +23,7 @@
       <th scope="col">Advocate</th>
       <th scope="col">Description</th>
       
-      {% if userType == "student" or isAdmin %}
+      {% if userType == "student" or admin %}
       <th scope="col">Attachments</th>
       {% endif %}
       
@@ -83,7 +83,7 @@
                 </form>
                 {% endif %}
             </td>
-             {% if userType == "student" %}
+             {% if userType == "student" or admin %}
                 <td>
                 <form action="{{ url_for('editDetailPage', id=incident.reportID) }}">
                     <input class="btn btn-outline-dark" type="submit" value="Edit Incident">
