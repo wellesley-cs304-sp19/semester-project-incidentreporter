@@ -12,6 +12,9 @@ import json, incidentReporter, bcrypt
 with open('testData.json', 'r') as f:
     users = json.load(f)
 
+# for each object in the parsed JSON file we hash the user's password and 
+# then add that and all their information (name, email, administrative status, role) into
+# our database using the insertNewUser function from incidentReporter.py
 for user in users:
     hashed = bcrypt.hashpw(user['password'].encode('utf-8'), bcrypt.gensalt())
     name = user['name']
