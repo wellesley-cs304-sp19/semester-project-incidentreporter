@@ -49,7 +49,7 @@
 
     <label for="advocate"> Advocate Name:
     <select name="advocate" id="advocate">
-            <option value="">
+            <option value="">Advocate
     {% for fac in facStaff %}
             <option value="{{fac.BNUM}}" {% if fac.BNUM==incidentInfo.advocateID %} selected="selected"{% endif %}> {{fac.name}} </option>
     {% endfor %}
@@ -60,7 +60,7 @@
     <label for="faculty"> Who are you reporting?
    
     <select name="faculty" id="faculty">
-            <option value="">
+            <option value="">Reported
     {% for fac in facStaff %}
             <option value= "{{fac.BNUM}}" {% if fac.BNUM==incidentInfo.reportedID %} selected="selected"{% endif %}>{{fac.name}}</option>
     {% endfor %}
@@ -72,11 +72,30 @@
         <input id="location" type="text" name="location" size="30" value = "{{incidentInfo.location}}" required autofocus>
     </label> <br>
     
+    
     <label for="date"> Date of Incident: 
         <input type="date" id="date" value = "{{incidentInfo.dateOfIncident}}" name="date" required>
     </label> <br>
     
-    
+    <script>
+        // This function sets the maximum choice for the date of incident to the current 
+        // day so that users cannot select a date in the future!
+        $(function() {
+            var dtToday = new Date();
+
+            var month = dtToday.getMonth() + 1;
+            var day = dtToday.getDate();
+            var year = dtToday.getFullYear();
+            if (month < 10)
+                month = '0' + month.toString();
+            if (day < 10)
+                day = '0' + day.toString();
+
+            var maxDate = year + '-' + month + '-' + day;
+
+            $('#date').attr('max', maxDate);
+        });
+    </script>
     
     <label for="category" > Type of Incident: 
     <select name="category" id="category" required>
@@ -102,8 +121,17 @@
 </form>
 </div>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
     <script>
+        var advocateDropDown = document.getElementById("advocate");
+        var advocate = advocateDropDown.options[advocateDropDown.selectedIndex].value;
+
+        var reportedDropDown = document.getElementById("faculty");
+        var reported = reportedDropDown.options[reportedDropDown.selectedIndex].value;
+        
+        if (advocate == reported) {
+            $("message").html("test");
+        }
         /* global $ */
 
         $("#description").change(function(){
@@ -199,6 +227,7 @@
                 $("#message").html("Change Saved Successfully");
             }
     }
+    
 
     </script>
 
